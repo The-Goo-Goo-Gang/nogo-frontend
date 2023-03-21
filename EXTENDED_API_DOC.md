@@ -35,6 +35,8 @@
 
 `player_our`: `Player` 我方玩家信息
 
+`turn_timeout`: `Int` 限时
+
 #### Player
 `name`: `String` 玩家名称
 
