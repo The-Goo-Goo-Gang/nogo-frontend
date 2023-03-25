@@ -3,10 +3,32 @@
   <div class="game">
     <router-view />
   </div>
+  <div id="title-bar">
+    <span class="title-text">NoGo 不围棋</span>
+  </div>
 </template>
 
 <style lang="scss">
 @import '~normalize.css';
+@import 'vue-material-design-icons/styles.css';
+
+#title-bar {
+  user-select: none;
+  -webkit-app-region: drag;
+  padding: 16px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+
+  .title-text {
+    font-weight: bold;
+    font-size: 14px;
+  }
+}
 
 #app {
   -webkit-font-smoothing: antialiased;
@@ -34,5 +56,25 @@
   background-repeat: no-repeat;
   background-size: cover;
   filter: blur(16px);
+}
+
+.icon-2x {
+  height: 2em;
+  width: 2em;
+
+  .material-design-icon__svg {
+    height: 2em;
+    width: 2em;
+  }
+}
+
+.icon-3x {
+  height: 3em;
+  width: 3em;
+
+  .material-design-icon__svg {
+    height: 3em;
+    width: 3em;
+  }
 }
 </style>
