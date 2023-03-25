@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 import { defineProps, withDefaults, onMounted, ref, computed, watch } from 'vue'
-import { Chess } from './chess'
+import { Chess } from '@/const'
 
 const LINE_WIDTH = 4
 
