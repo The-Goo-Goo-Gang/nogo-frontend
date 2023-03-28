@@ -3,7 +3,8 @@ import { Chess, PlayerType } from './const'
 export interface Player {
   name: string,
   avatar?: string,
-  type: PlayerType
+  type: PlayerType,
+  chess_type: Chess
 }
 
 export interface GameMetadata {
@@ -21,8 +22,16 @@ export interface DynamicStatistics {
 
 export interface GameState {
   chess_board: Array<Array<Chess>>,
+  is_our_player_playing: boolean,
   metadata: GameMetadata,
   statistics: Array<DynamicStatistics>
+}
+
+export interface TimerState {
+  running: boolean,
+  current_timestamp: number,
+  start_timestamp: number,
+  end_timestamp: number
 }
 
 export interface UiState {
