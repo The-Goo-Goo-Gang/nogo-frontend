@@ -24,6 +24,8 @@
 #### Game
 `chess_board`: `Array<Array<Chess>>` 当前的棋盘状态（第一维是行，第二维是列）
 
+`is_our_player_playing`: `Boolean` 是否为我方玩家正在下棋
+
 `metadata`: `GameMetadata` 当前游戏信息
 
 `statistics`: `Array<DynamicStatistics>` 要显示的统计数据
