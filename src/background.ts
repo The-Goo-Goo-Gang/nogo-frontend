@@ -100,8 +100,13 @@ function connectToBackend () {
     }
     // client.destroy()
   })
+  ipcMain.on('sendData', (e, opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
+    const data = JSON.stringify(new NetworkData(opCode, data1, data2)) + '\n'
+    if (client) {
+      client.write(data)
+    }
+  })
   stick.onData(data => {
-    console.log(data)
     try {
       const parsedData: NetworkData = JSON.parse(data)
       if (parsedData.op) {
