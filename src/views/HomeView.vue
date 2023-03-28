@@ -2,9 +2,7 @@
   <div class="game-home">
     <h1 class="game-title">NoGo</h1>
     <div class="game-actions">
-      <RouterLink to="/game">
-        <button class="game-action-btn">单人游戏</button>
-      </RouterLink>
+      <button class="game-action-btn" @click="startLocalGame">单人游戏</button>
       <button class="game-action-btn">设置</button>
       <button class="game-action-btn" @click="exit">退出</button>
     </div>
@@ -12,8 +10,18 @@
 </template>
 
 <script lang="ts" setup>
+import { OpCode, LocalGameType } from '@/const'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 const exit = () => {
   window.electronAPI.exit()
+}
+
+const startLocalGame = () => {
+  window.electronAPI.sendData(OpCode.START_LOCAL_GAME_OP, `${LocalGameType.PVP}`, '9')
+  router.push('/game')
 }
 </script>
 
