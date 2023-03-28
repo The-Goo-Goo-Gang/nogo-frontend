@@ -16,7 +16,7 @@
 
 ### 游戏状态 JSON
 
-#### State
+#### UiState
 `is_gaming`: `Boolean` 是否正在游戏中
 
 `game`: `Game|null` 当前正在进行的游戏状态。若不在游戏中，为 `null`
@@ -45,6 +45,8 @@
 `avatar`: `String|null` 玩家头像（如果没有，为 `null`）
 
 `type`: `PlayerType` 玩家类型
+
+`chess_type`: `Int` 玩家执黑/白（黑 = 1，白 = -1）
 
 #### `Enum` PlayerType
 `LocalHumanPlayer` = 0
