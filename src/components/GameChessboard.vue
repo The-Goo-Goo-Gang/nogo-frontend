@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, withDefaults, onMounted, ref, computed, watch } from 'vue'
+import { defineProps, withDefaults, onMounted, ref, computed, watch, defineEmits, reactive } from 'vue'
 import { Chess } from '@/const'
 
 const LINE_WIDTH = 4
@@ -15,22 +15,13 @@ const LINE_WIDTH = 4
 const props = withDefaults(defineProps<{
   width: number
   height: number
+  chesses?: Array<Array<Chess>>,
   size?: number
 }>(), {
   size: 9
 })
 
-const chesses = ref(new Array(...((() => {
-  const arr: Array<Array<Chess>> = []
-  for (let i = 0; i < props.size; i++) {
-    const arr2: Array<Chess> = []
-    for (let j = 0; j < props.size; j++) {
-      arr2.push(Chess.None)
-    }
-    arr.push(arr2)
-  }
-  return arr
-})())))
+const emit = defineEmits(['chess-clicked'])
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 const canvasStyle = computed(() => {
@@ -52,6 +43,21 @@ const columnPadding = computed(() => columnSpace.value / 2 + heightDiff.value / 
 const rowSize = computed(() => LINE_WIDTH + rowSpace.value)
 const columnSize = computed(() => LINE_WIDTH + columnSpace.value)
 
+const chesses = computed(() => {
+  if (props.chesses) return props.chesses
+  return reactive(new Array(...((() => {
+    const arr: Array<Array<Chess>> = []
+    for (let i = 0; i < props.size; i++) {
+      const arr2: Array<Chess> = []
+      for (let j = 0; j < props.size; j++) {
+        arr2.push(Chess.None)
+      }
+      arr.push(arr2)
+    }
+    return arr
+  })())))
+})
+
 function clearCanvas () {
   if (canvas.value != null) {
     const ctx = canvas.value.getContext('2d')
@@ -72,14 +78,15 @@ function canvasClicked (e: MouseEvent) {
   if (canvas.value != null) {
     const x = Math.floor((e.offsetY - heightDiff.value / 2) / rowSize.value)
     const y = Math.floor((e.offsetX - widthDiff.value / 2) / columnSize.value)
-    console.log(x, y, chesses.value[x][y])
-    if (chesses.value[x][y] === Chess.None) {
-      chesses.value[x][y] = Chess.Black
-    } else if (chesses.value[x][y] === Chess.Black) {
-      chesses.value[x][y] = Chess.White
-    } else {
-      chesses.value[x][y] = Chess.None
-    }
+    // console.log(x, y, chesses.value[x][y])
+    emit('chess-clicked', x, y)
+    // if (chesses.value[x][y] === Chess.None) {
+    //   chesses.value[x][y] = Chess.Black
+    // } else if (chesses.value[x][y] === Chess.Black) {
+    //   chesses.value[x][y] = Chess.White
+    // } else {
+    //   chesses.value[x][y] = Chess.None
+    // }
   }
 }
 
