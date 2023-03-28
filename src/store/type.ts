@@ -1,5 +1,6 @@
-import { UiState } from '@/state'
+import { UiState, TimerState } from '@/state'
 
 export interface GlobalState {
-  uiState: UiState
+  uiState: UiState,
+  timer: TimerState
 }
