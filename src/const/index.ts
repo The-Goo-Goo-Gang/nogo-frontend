@@ -6,8 +6,13 @@ export enum PlayerType {
 
 export enum Chess {
   None = 0,
-  Black,
-  White
+  Black = 1,
+  White = -1
+}
+
+export enum LocalGameType {
+  PVP = 0,
+  PVE
 }
 
 export enum OpCode {
