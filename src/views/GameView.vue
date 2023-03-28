@@ -1,23 +1,74 @@
 <template>
   <div class="game-container grid">
     <div class="game-left-container left">
-      <PlayerIndicator :player="{name: 'Player 1', type: 0}" :is-playing="true" />
-      <div class="game-chessboard">
-        <GameChessboard :width="400" :height="400"></GameChessboard>
+      <div class="player-container">
+        <PlayerIndicator
+          :player="store.state.uiState.game?.metadata.player_opposing || { name: 'Player B', type: PlayerType.LocalHumanPlayer, chess_type: Chess.White }"
+          :is-playing="!isOurPlayerPlaying" />
+        <div class="timer" :style="{ opacity: (!isOurPlayerPlaying) ? 1 : 0 }">
+          <ProgressBar :progress="timerProgress" />
+        </div>
       </div>
-      <PlayerIndicator :player="{name: 'Player 2', type: 0}" />
+      <div class="game-chessboard">
+        <GameChessboard :width="400" :height="400" :chesses="store.state.uiState.game?.chess_board"
+          @chess-clicked="onChessClicked"></GameChessboard>
+      </div>
+      <div class="player-container">
+        <div class="timer" :style="{ opacity: isOurPlayerPlaying ? 1 : 0 }">
+          <ProgressBar :progress="timerProgress" />
+        </div>
+        <PlayerIndicator
+          :player="store.state.uiState.game?.metadata.player_our || { name: 'Player A', type: PlayerType.LocalHumanPlayer, chess_type: Chess.Black }"
+          :is-playing="isOurPlayerPlaying"
+          :show-timer="isOurPlayerPlaying" :reverse="true" />
+      </div>
     </div>
-    <div class="game-right-container right">
-    </div>
+    <!-- <div class="game-right-container right">
+    </div> -->
   </div>
 </template>
 
 <script setup lang="ts">
 import PlayerIndicator from '@/components/PlayerIndicator.vue'
 import GameChessboard from '@/components/GameChessboard.vue'
+import ProgressBar from '@/components/ProgressBar.vue'
+import { useStore } from '@/store'
+import { Chess, PlayerType } from '@/const'
+import { computed, watch, onMounted } from 'vue'
+
+const store = useStore()
+
+const onChessClicked = (x: number, y: number) => {
+  console.log(x, y, (store.state.uiState.game?.chess_board[x] || [])[y] || Chess.None)
+  store.dispatch('doMove', { x, y })
+}
+
+const isOurPlayerPlaying = computed(() => store.state.uiState.game?.is_our_player_playing)
+const nowPlayer = computed(() => {
+  if (!store.state.uiState.game) return null
+  return store.state.uiState.game.is_our_player_playing ? store.state.uiState.game.metadata.player_our : store.state.uiState.game.metadata.player_opposing
+})
+const timerProgress = computed(() => store.getters.timerProgress)
+
+watch(nowPlayer, () => store.dispatch('startTimer', { duration: store.state.uiState.game?.metadata.turn_timeout || 60 }))
+
+onMounted(() => {
+  if (nowPlayer.value != null) store.dispatch('startTimer', { duration: store.state.uiState.game?.metadata.turn_timeout || 60 })
+})
 </script>
 
 <style lang="scss">
+.timer {
+  transition: opacity ease-in-out .3s;
+  padding: 0px 16px;
+}
+
+.player-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .game-chessboard {
   padding: 16px;
   background: rgba($color: #FFFFFF, $alpha: 0.5);
