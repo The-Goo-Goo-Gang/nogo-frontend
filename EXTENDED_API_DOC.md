@@ -4,7 +4,7 @@
 
 `data1`: 游戏类型（0 = PVP，1 = PVE）
 
-`data2`: 空
+`data2`: 棋盘大小（9/11/13，若为空则默认大小为 9）
 
 ## UPDATE_UI_STATE_OP
 
