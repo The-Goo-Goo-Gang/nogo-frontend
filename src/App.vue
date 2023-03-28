@@ -8,6 +8,22 @@
   </div>
 </template>
 
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import { OpCode } from './const'
+import { useStore } from './store'
+
+const store = useStore()
+
+onMounted(() => {
+  window.electronAPI.onData((opCode, data1, data2) => {
+    if (opCode === OpCode.UPDATE_UI_STATE_OP && data1 && data2) {
+      store.commit('updateState', JSON.parse(data2))
+    }
+  })
+})
+</script>
+
 <style lang="scss">
 @import '~normalize.css';
 @import 'vue-material-design-icons/styles.css';
