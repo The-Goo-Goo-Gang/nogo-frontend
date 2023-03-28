@@ -29,7 +29,7 @@ import { PlayerType } from '@/const'
 
 const props = withDefaults(defineProps<{
   player: Player,
-  isPlaying?: boolean
+  isPlaying?: boolean,
 }>(), {
   isPlaying: false
 })
