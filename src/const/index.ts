@@ -4,6 +4,19 @@ export enum PlayerType {
   BotPlayer
 }
 
+export enum GameStatus {
+  NOT_PREPARED,
+  ON_GOING,
+  GAME_OVER
+}
+
+export enum WinType {
+  NONE,
+  TIMEOUT,
+  SUICIDE,
+  GIVEUP
+}
+
 export enum Chess {
   None = 0,
   Black = 1,
@@ -16,7 +29,6 @@ export enum LocalGameType {
 }
 
 export enum OpCode {
-  PING_OP = 1,
   READY_OP = 200000,
   REJECT_OP,
   MOVE_OP,
@@ -26,6 +38,7 @@ export enum OpCode {
   GIVEUP_END_OP,
   LEAVE_OP,
   CHAT_OP,
-  START_LOCAL_GAME_OP,
-  UPDATE_UI_STATE_OP
+  START_LOCAL_GAME_OP = 100000,
+  UPDATE_UI_STATE_OP,
+  LOCAL_GAME_TIMEOUT_OP
 }

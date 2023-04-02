@@ -1,7 +1,7 @@
 import { createStore, Store, useStore as baseUseStore } from 'vuex'
 import { GlobalState } from './type'
-import { InjectionKey } from 'vue'
-import { Chess, OpCode, PlayerType } from '@/const'
+import { InjectionKey, reactive } from 'vue'
+import { Chess, GameStatus, OpCode, PlayerType, WinType } from '@/const'
 import { UiState } from '@/state'
 
 export const key: InjectionKey<Store<GlobalState>> = Symbol('globalState')
@@ -10,8 +10,9 @@ export const store = createStore<GlobalState>({
   state: {
     uiState: {
       is_gaming: false,
+      status: GameStatus.NOT_PREPARED,
       game: {
-        chess_board: [[]],
+        chessboard: [[]],
         is_our_player_playing: true,
         metadata: {
           size: 9,
@@ -28,6 +29,10 @@ export const store = createStore<GlobalState>({
           turn_timeout: 60
         },
         statistics: []
+      },
+      game_result: {
+        winner: Chess.None,
+        win_type: WinType.NONE
       }
     },
     timer: {
@@ -65,7 +70,7 @@ export const store = createStore<GlobalState>({
       state.timer.running = false
     },
     updateState (state, newState: UiState) {
-      state.uiState = newState
+      state.uiState = reactive(newState)
     },
     doMove (state, payload: { x: number, y: number, chess: Chess }) {
       if (state.uiState.game) {
