@@ -39,7 +39,9 @@ export const store = createStore<GlobalState>({
       running: false,
       current_timestamp: 0,
       start_timestamp: 0,
-      end_timestamp: 0
+      end_timestamp: 0,
+      timer_interval: null,
+      timer_timeout: null
     }
   },
   getters: {
@@ -68,10 +70,12 @@ export const store = createStore<GlobalState>({
     }
   },
   mutations: {
-    startTimer (state, duration: number) {
+    startTimer (state, payload: { duration: number, interval: number, timeout: number }) {
       state.timer.running = true
       state.timer.start_timestamp = new Date().getTime()
-      state.timer.end_timestamp = new Date().getTime() + duration * 1000
+      state.timer.end_timestamp = new Date().getTime() + payload.duration * 1000
+      state.timer.timer_interval = payload.interval
+      state.timer.timer_timeout = payload.timeout
     },
     doTimer (state, timestamp: number) {
       if (timestamp < state.timer.start_timestamp) {
@@ -97,15 +101,28 @@ export const store = createStore<GlobalState>({
     }
   },
   actions: {
-    startTimer ({ commit }, payload: { duration: number }) {
-      commit('startTimer', payload.duration)
+    startTimer ({ commit, state }, payload: { duration: number }) {
+      if (state.timer.running) {
+        commit('endTimer')
+        if (state.timer.timer_interval) {
+          clearInterval(state.timer.timer_interval)
+        }
+        if (state.timer.timer_timeout) {
+          clearTimeout(state.timer.timer_timeout)
+        }
+      }
       const interval = setInterval(() => {
         commit('doTimer', new Date().getTime())
       }, 100)
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         commit('endTimer')
         clearInterval(interval)
       }, (payload.duration + 1) * 1000)
+      commit('startTimer', {
+        duration: payload.duration,
+        interval,
+        timeout
+      })
     },
     doMove ({ commit, state }, payload: { x: number, y: number }) {
       if (state.uiState.game) {
@@ -118,6 +135,12 @@ export const store = createStore<GlobalState>({
         }
       }
     },
+    timeout ({ state }) {
+      if (state.uiState.game) {
+        const nowPlayer = state.uiState.game.is_our_player_playing ? state.uiState.game.metadata.player_our : state.uiState.game.metadata.player_opposing
+        const nowPlayerChess = nowPlayer.chess_type === Chess.Black ? 'b' : 'w'
+        window.electronAPI.sendData(OpCode.LOCAL_GAME_TIMEOUT_OP, nowPlayerChess)
+      }
     }
   },
   modules: {
