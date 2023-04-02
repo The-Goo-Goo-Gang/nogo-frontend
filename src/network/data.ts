@@ -5,9 +5,9 @@ export class NetworkData {
   data1?: string
   data2?: string
 
-  constructor (op: OpCode, data1: string | null = null, data2: string | null = null) {
+  constructor (op: OpCode, data1?: string, data2?: string) {
     this.op = op
-    if (data1) this.data1 = data1
-    if (data2) this.data2 = data2
+    if (data1 !== undefined) this.data1 = data1
+    if (data2 !== undefined) this.data2 = data2
   }
 }

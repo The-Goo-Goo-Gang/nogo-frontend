@@ -90,8 +90,8 @@ export const store = createStore<GlobalState>({
     },
     doMove (state, payload: { x: number, y: number, chess: Chess }) {
       if (state.uiState.game) {
-        if (!state.uiState.game.chess_board[payload.x]) state.uiState.game.chess_board[payload.x] = []
-        state.uiState.game.chess_board[payload.x][payload.y] = payload.chess
+        if (state.uiState.game.chessboard[payload.x] == null) state.uiState.game.chessboard[payload.x] = []
+        state.uiState.game.chessboard[payload.x][payload.y] = payload.chess
         state.uiState.game.is_our_player_playing = !state.uiState.game.is_our_player_playing
       }
     }
@@ -109,13 +109,15 @@ export const store = createStore<GlobalState>({
     },
     doMove ({ commit, state }, payload: { x: number, y: number }) {
       if (state.uiState.game) {
-        const nowChess = (state.uiState.game.chess_board[payload.x] || [])[payload.y] || Chess.None
+        const nowChess = (state.uiState.game.chessboard[payload.x] || [])[payload.y] || Chess.None
         if (nowChess === Chess.None) {
           const chess = state.uiState.game.is_our_player_playing ? state.uiState.game.metadata.player_our.chess_type : state.uiState.game.metadata.player_opposing.chess_type
           commit('doMove', { x: payload.x, y: payload.y, chess })
-          window.electronAPI.sendData(OpCode.MOVE_OP, `${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[payload.x]}${payload.y}`)
+          const role = chess === Chess.Black ? 'b' : 'w'
+          window.electronAPI.sendData(OpCode.MOVE_OP, `${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[payload.x]}${payload.y + 1}`, role)
         }
       }
+    },
     }
   },
   modules: {
