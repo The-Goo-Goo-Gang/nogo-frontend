@@ -12,7 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send(channel, ...args)
   },
   sendData: (opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
-    ipcRenderer.send('sendData', opCode, data1, data2)
+    ipcRenderer.send('sendData', opCode, data1 || '', data2 || '')
   },
   exit: () => {
     ipcRenderer.send('exit')
