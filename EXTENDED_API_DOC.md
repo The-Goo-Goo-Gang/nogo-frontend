@@ -19,10 +19,31 @@
 #### UiState
 `is_gaming`: `Boolean` 是否正在游戏中
 
+`status`: `GameStatus` 当前游戏状态
+
 `game`: `Game|null` 当前正在进行的游戏状态。若不在游戏中，为 `null`
 
+`game_result`: `GameResult|null` 游戏结果
+
+#### `Enum` GameStatus
+`NOT_PREPARED`, `ON_GOING`, `GAME_OVER`
+
+#### GameResult
+`winner`: `Chess` 执哪种棋的一方获胜
+
+`win_type`: `WinType` 获胜原因
+
+#### `Enum` WinType
+`NONE = 0` 未获胜
+
+`TIMEOUT` 超时
+
+`SUICIDE` 自杀
+
+`GIVEUP` 认输
+
 #### Game
-`chess_board`: `Array<Array<Chess>>` 当前的棋盘状态（第一维是行，第二维是列）
+`chessboard`: `Array<Array<Chess>>` 当前的棋盘状态（第一维是行，第二维是列）
 
 `is_our_player_playing`: `Boolean` 是否为我方玩家正在下棋
 
