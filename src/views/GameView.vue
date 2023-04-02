@@ -24,7 +24,7 @@
     <!-- <div class="game-right-container right">
     </div> -->
   </div>
-  <div class="game-result" :class="store.state.uiState.game_result != null ? ['show'] : ['hide']">
+  <div class="game-result" :class="showGameResult ? ['show'] : ['hide']">
     <div class="game-result-content">
       <h3>Game Over!</h3>
       <p>{{ winnerName }}获胜</p>
@@ -41,7 +41,7 @@ import PlayerIndicator from '@/components/PlayerIndicator.vue'
 import GameChessboard from '@/components/GameChessboard.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
 import { useStore } from '@/store'
-import { Chess, GameStatus, LocalGameType, OpCode, PlayerType } from '@/const'
+import { Chess, GameStatus, LocalGameType, PlayerType } from '@/const'
 import { computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -49,7 +49,7 @@ const store = useStore()
 const router = useRouter()
 
 const restartGame = () => {
-  window.electronAPI.sendData(OpCode.START_LOCAL_GAME_OP, `${LocalGameType.PVP}`, '9')
+  store.dispatch('startLocalGame', { type: LocalGameType.PVP, size: 9 })
 }
 
 const onChessClicked = (x: number, y: number) => {
@@ -60,6 +60,8 @@ const onChessClicked = (x: number, y: number) => {
 const returnHome = () => {
   router.push('/')
 }
+
+const showGameResult = computed(() => store.state.uiState.status === GameStatus.GAME_OVER && store.state.uiState.game_result != null)
 
 const chessboard = computed(() => store.getters.chessboard)
 const isOurPlayerPlaying = computed(() => store.state.uiState.game?.is_our_player_playing)

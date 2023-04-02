@@ -10,9 +10,11 @@
 </template>
 
 <script lang="ts" setup>
-import { OpCode, LocalGameType } from '@/const'
+import { LocalGameType } from '@/const'
+import { useStore } from '@/store'
 import { useRouter } from 'vue-router'
 
+const store = useStore()
 const router = useRouter()
 
 const exit = () => {
@@ -20,7 +22,7 @@ const exit = () => {
 }
 
 const startLocalGame = () => {
-  window.electronAPI.sendData(OpCode.START_LOCAL_GAME_OP, `${LocalGameType.PVP}`, '9')
+  store.dispatch('startLocalGame', { type: LocalGameType.PVP, size: 9 })
   router.push('/game')
 }
 </script>

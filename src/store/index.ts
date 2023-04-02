@@ -1,7 +1,7 @@
 import { createStore, Store, useStore as baseUseStore } from 'vuex'
 import { GlobalState } from './type'
 import { InjectionKey, reactive } from 'vue'
-import { Chess, GameStatus, OpCode, PlayerType, WinType } from '@/const'
+import { Chess, GameStatus, LocalGameType, OpCode, PlayerType, WinType } from '@/const'
 import { UiState } from '@/state'
 
 export const key: InjectionKey<Store<GlobalState>> = Symbol('globalState')
@@ -70,6 +70,9 @@ export const store = createStore<GlobalState>({
     }
   },
   mutations: {
+    startLocalGame (state) {
+      state.uiState.status = GameStatus.NOT_PREPARED
+    },
     startTimer (state, payload: { duration: number, interval: number, timeout: number }) {
       state.timer.running = true
       state.timer.start_timestamp = new Date().getTime()
@@ -101,6 +104,10 @@ export const store = createStore<GlobalState>({
     }
   },
   actions: {
+    startLocalGame ({ commit }, payload: { type: LocalGameType, size: 9|11|13 }) {
+      commit('startLocalGame')
+      window.electronAPI.sendData(OpCode.START_LOCAL_GAME_OP, `${payload.type}`, `${payload.size}`)
+    },
     startTimer ({ commit, state }, payload: { duration: number }) {
       if (state.timer.running) {
         commit('endTimer')
