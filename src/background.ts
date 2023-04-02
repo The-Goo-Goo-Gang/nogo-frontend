@@ -89,13 +89,15 @@ function startServer () {
 
 let client: Socket | null = null
 const stick = new Stick()
-function connectToBackend () {
+function connectToBackend (port = 5000, ipAddress = '127.0.0.1') {
   client = new Socket()
-  client.connect(5000, '127.0.0.1', () => {
+  client.connect(port, ipAddress, () => {
     console.log('connect success')
     if (client) {
       client.on('data', (data: Buffer) => {
-        stick.pushData(data.toLocaleString())
+        const str = data.toLocaleString()
+        // console.log('onData raw', str)
+        stick.pushData(str)
       })
     }
     // client.destroy()
@@ -103,14 +105,15 @@ function connectToBackend () {
   ipcMain.on('sendData', (e, opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
     const data = JSON.stringify(new NetworkData(opCode, data1, data2)) + '\n'
     if (client) {
+      console.log('sendData', data)
       client.write(data)
     }
   })
   stick.onData(data => {
+    console.log('onData', data)
     try {
       const parsedData: NetworkData = JSON.parse(data)
       if (parsedData.op) {
-        console.log(parsedData)
         BrowserWindow.getAllWindows().forEach(window => {
           window.webContents.send('data', parsedData)
         })
@@ -164,7 +167,7 @@ app.on('ready', async () => {
       console.error('Vue Devtools failed to install:', e)
     }
   }
-  startServer()
+  if (!isDevelopment) startServer()
   setTimeout(() => {
     connectToBackend()
     createWindow()
