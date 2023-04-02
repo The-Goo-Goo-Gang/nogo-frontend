@@ -16,7 +16,7 @@ export class Stick {
   pushData (newData: string): void {
     this.strBuffer += newData
     const arr = this.strBuffer.split('\n')
-    if (arr.length > 1) {
+    while (arr.length > 1) {
       const data = arr.shift()
       this.strBuffer = arr.join('\n')
       this.eventEmitter.emit('data', data)
