@@ -49,6 +49,22 @@ export const store = createStore<GlobalState>({
     timerProgress (state) {
       if (!state.timer.running) return 0
       return (state.timer.current_timestamp - state.timer.start_timestamp) / (state.timer.end_timestamp - state.timer.start_timestamp) * 100
+    },
+    chessboard (state) {
+      if (state.uiState.game) {
+        return state.uiState.game.chessboard
+      }
+      return new Array(...((() => {
+        const arr: Array<Array<Chess>> = []
+        for (let i = 0; i < 13; i++) {
+          const arr2: Array<Chess> = []
+          for (let j = 0; j < 13; j++) {
+            arr2.push(Chess.None)
+          }
+          arr.push(arr2)
+        }
+        return arr
+      })()))
     }
   },
   mutations: {

@@ -15,7 +15,7 @@ const LINE_WIDTH = 4
 const props = withDefaults(defineProps<{
   width: number
   height: number
-  chesses?: Array<Array<Chess>>,
+  chesses: Array<Array<Chess>>,
   size?: number
 }>(), {
   size: 9
@@ -43,20 +43,7 @@ const columnPadding = computed(() => columnSpace.value / 2 + heightDiff.value / 
 const rowSize = computed(() => LINE_WIDTH + rowSpace.value)
 const columnSize = computed(() => LINE_WIDTH + columnSpace.value)
 
-const chesses = computed(() => {
-  if (props.chesses) return props.chesses
-  return reactive(new Array(...((() => {
-    const arr: Array<Array<Chess>> = []
-    for (let i = 0; i < props.size; i++) {
-      const arr2: Array<Chess> = []
-      for (let j = 0; j < props.size; j++) {
-        arr2.push(Chess.None)
-      }
-      arr.push(arr2)
-    }
-    return arr
-  })())))
-})
+const chesses = computed(() => props.chesses)
 
 function clearCanvas () {
   if (canvas.value != null) {
@@ -118,6 +105,7 @@ function drawChessboard () {
 
 function drawChesses () {
   if (canvas.value != null) {
+    console.log('drawChesses', chesses.value)
     const ctx = canvas.value.getContext('2d')
     if (ctx != null) {
       ctx.lineWidth = LINE_WIDTH
@@ -125,7 +113,7 @@ function drawChesses () {
         row.forEach((column, columnIndex) => {
           const y = heightDiff.value + rowSize.value * rowIndex + rowSize.value / 2 - LINE_WIDTH / 2
           const x = widthDiff.value + columnSize.value * columnIndex + columnSize.value / 2 - LINE_WIDTH / 2
-          switch (chesses.value[rowIndex][columnIndex]) {
+          switch (column) {
             case Chess.None:
               break
             case Chess.Black:
@@ -155,7 +143,7 @@ onMounted(() => {
   drawChessboard()
 })
 
-watch(chesses.value, () => {
+watch(chesses, () => {
   drawChessboard()
 })
 
