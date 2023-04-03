@@ -61,7 +61,7 @@ const returnHome = () => {
   router.push('/')
 }
 
-const showGameResult = computed(() => store.state.uiState.status === GameStatus.GAME_OVER && store.state.uiState.game_result != null)
+const showGameResult = computed(() => store.state.uiState.status === GameStatus.GAME_OVER && store.state.uiState.game_result.winner !== Chess.None)
 
 const chessboard = computed(() => store.getters.chessboard)
 const isOurPlayerPlaying = computed(() => store.state.uiState.game?.is_our_player_playing)
@@ -72,7 +72,7 @@ const nowPlayer = computed(() => {
 const timerProgress = computed(() => store.getters.timerProgress)
 const timerEnd = computed(() => store.getters.timerEnd)
 const winnerName = computed(() => {
-  const winner = store.state.uiState.game_result?.winner || Chess.None
+  const winner = store.state.uiState.game_result.winner
   if (winner === Chess.Black) {
     return '黑方'
   } else if (winner === Chess.White) {
@@ -94,7 +94,7 @@ watch(nowPlayer, () => {
 })
 watch(timerEnd, (isEnd) => {
   console.log('timerEnd change ', isEnd)
-  if (isEnd) {
+  if (isEnd && store.state.uiState.status === GameStatus.ON_GOING) {
     onTimeout()
   }
 })

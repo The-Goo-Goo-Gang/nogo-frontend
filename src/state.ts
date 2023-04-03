@@ -45,5 +45,5 @@ export interface UiState {
   is_gaming: boolean,
   status: GameStatus,
   game?: GameState,
-  game_result?: GameResult
+  game_result: GameResult
 }
