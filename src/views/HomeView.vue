@@ -3,7 +3,7 @@
     <h1 class="game-title">NoGo</h1>
     <div class="game-actions">
       <button class="game-action-btn" @click="startLocalGame">单人游戏</button>
-      <button class="game-action-btn">设置</button>
+      <button class="game-action-btn disabled" alt="未完成">设置</button>
       <button class="game-action-btn" @click="exit">退出</button>
     </div>
   </div>
@@ -60,13 +60,20 @@ $bezier: cubic-bezier(0.4, 0, 0.2, 1);
   border: 0;
   transition: color 0.3s $bezier, background .3s $bezier;
 
-  &:hover {
-    color: white;
-    background-color: rgba($color: $theme-color, $alpha: 0.75)!important;
+  &:not(.disabled) {
+    &:hover {
+      color: white;
+      background-color: rgba($color: $theme-color, $alpha: 0.75)!important;
+    }
+
+    &:active {
+      background-color: $theme-color!important;
+    }
   }
 
-  &:active {
-    background-color: $theme-color!important;
+  &.disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
   }
 
   &.fill {
