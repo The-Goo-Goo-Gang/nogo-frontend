@@ -55,34 +55,35 @@ async function createWindow () {
 }
 
 let serverProcess: ChildProcess | null = null
-const runExec = (cmdStr: string, cmdPath: string, onSuccess: () => void) => {
-  serverProcess = spawn(cmdStr, { cwd: cmdPath })
+const runExec = (cmdStr: string, cmdPath: string, args: Array<string> = [], onSuccess: () => void) => {
+  serverProcess = spawn(cmdStr, args, { cwd: cmdPath })
 
   if (serverProcess != null) {
     // 启动成功的输出
     if (serverProcess.stdout != null) {
+      console.log('launch server success')
+      onSuccess()
       serverProcess.stdout.on('data', function (data: string) {
-        console.log('启动服务器成功！ stdout:' + data)
-        onSuccess()
+        console.log('stdout: ' + data)
       })
     }
     // 发生错误的输出
     if (serverProcess.stderr != null) {
       serverProcess.stderr.on('data', function (data: string) {
-        console.log('stderr:' + data)
+        console.log('stderr: ' + data)
       })
     }
     // 退出后的输出
     serverProcess.on('close', function (code: string) {
-      console.log('out code:' + code)
+      console.log('out code: ' + code)
     })
   }
 }
-function startServer () {
+function startServer (port = 5000) {
   const cmdStr = 'server.exe'
   const cmdPath = './server'
   const promise = new Promise<boolean>((resolve, reject) => {
-    runExec(cmdStr, cmdPath, () => resolve(true))
+    runExec(cmdStr, cmdPath, [`${port}`], () => resolve(true))
   })
   return promise
 }
@@ -167,7 +168,7 @@ app.on('ready', async () => {
       console.error('Vue Devtools failed to install:', e)
     }
   }
-  if (!isDevelopment) startServer()
+  // startServer()
   setTimeout(() => {
     connectToBackend()
     createWindow()
