@@ -13,7 +13,7 @@
           <WindowMinimizeIcon />
         </div>
         <div class="title-bar-btn title-bar-btn-warning" @click="exit">
-          <CloseIcon />
+          <WindowCloseIcon />
         </div>
       </div>
       <div class="side-spacer"></div>
@@ -22,8 +22,8 @@
 </template>
 
 <script setup lang="ts">
-import CloseIcon from 'vue-material-design-icons/Close.vue'
 import WindowMinimizeIcon from 'vue-material-design-icons/WindowMinimize.vue'
+import WindowCloseIcon from 'vue-material-design-icons/WindowClose.vue'
 import { onMounted } from 'vue'
 import { OpCode } from './const'
 import { useStore } from './store'

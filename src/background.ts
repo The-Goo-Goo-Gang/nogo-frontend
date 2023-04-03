@@ -32,7 +32,8 @@ async function createWindow () {
     },
     title: 'NoGo 不围棋',
     titleBarStyle: 'hidden',
-    frame: false
+    frame: false,
+    icon: './public/favicon.ico'
   })
 
   ipcMain.on('exit', e => {

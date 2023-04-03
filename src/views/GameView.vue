@@ -152,7 +152,7 @@ onMounted(() => {
   }
 
   .game-result-content {
-    padding: 16px;
+    padding: 32px;
     background: rgba($color: #FFFFFF, $alpha: 0.5);
     border-radius: 16px;
     display: inline;
