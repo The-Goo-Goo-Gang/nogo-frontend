@@ -1,6 +1,10 @@
 {
   "name": "nogo-frontend",
   "version": "0.1.0",
+  "author": {
+    "name": "The-Goo-Goo-Gang"
+  },
+  "description": "程设大作业 - 不围棋",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",

@@ -9,7 +9,8 @@ module.exports = defineConfig({
         appId: 'com.googoogang.nogo',
         productName: 'NoGo 不围棋',
         win: {
-          target: 'portable'
+          target: 'portable',
+          icon: './public/favicon.ico'
         },
         extraFiles: [
           {
