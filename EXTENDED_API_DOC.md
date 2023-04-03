@@ -23,7 +23,7 @@
 
 `game`: `Game|null` 当前正在进行的游戏状态。若不在游戏中，为 `null`
 
-`game_result`: `GameResult|null` 游戏结果
+`game_result`: `GameResult` 游戏结果
 
 #### `Enum` GameStatus
 `NOT_PREPARED`, `ON_GOING`, `GAME_OVER`
