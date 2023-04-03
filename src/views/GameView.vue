@@ -31,6 +31,7 @@
     <div class="game-result-content">
       <h3>Game Over!</h3>
       <p>{{ winnerName }}获胜</p>
+      <p>原因：{{ winReasonText }}</p>
       <div class="game-actions">
         <button class="game-action-btn" @click="restartGame">再来一局</button>
         <button class="game-action-btn" @click="returnHome">返回首页</button>
@@ -44,7 +45,7 @@ import PlayerIndicator from '@/components/PlayerIndicator.vue'
 import GameChessboard from '@/components/GameChessboard.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
 import { useStore } from '@/store'
-import { Chess, GameStatus, LocalGameType, OpCode, PlayerType } from '@/const'
+import { Chess, GameStatus, LocalGameType, OpCode, PlayerType, WinType } from '@/const'
 import { computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -72,8 +73,11 @@ const giveUp = () => {
   }
 }
 
-const showGameResult = computed(() => store.state.uiState.status === GameStatus.GAME_OVER && store.state.uiState.game_result.winner !== Chess.None)
+const onTimeout = () => {
+  store.dispatch('timeout')
+}
 
+const showGameResult = computed(() => store.state.uiState.status === GameStatus.GAME_OVER && store.state.uiState.game_result.winner !== Chess.None)
 const chessboard = computed(() => store.getters.chessboard)
 const isOurPlayerPlaying = computed(() => store.state.uiState.game?.is_our_player_playing)
 const nowPlayer = computed(() => {
@@ -92,11 +96,29 @@ const winnerName = computed(() => {
     return ''
   }
 })
+const loserName = computed(() => {
+  const loser = -store.state.uiState.game_result.winner
+  if (loser === Chess.Black) {
+    return '黑方'
+  } else if (loser === Chess.White) {
+    return '白方'
+  } else {
+    return ''
+  }
+})
+const winReasonText = computed(() => {
+  const reason = store.state.uiState.game_result.win_type
+  if (reason === WinType.GIVEUP) {
+    return `${loserName.value}认输`
+  } else if (reason === WinType.TIMEOUT) {
+    return `${loserName.value}超时`
+  } else if (reason === WinType.SUICIDE) {
+    return `${loserName.value}吃掉了${winnerName.value}的棋子`
+  } else {
+    return ''
+  }
+})
 const timeout = computed(() => store.state.uiState.game?.metadata.turn_timeout || 60)
-
-const onTimeout = () => {
-  store.dispatch('timeout')
-}
 
 watch(nowPlayer, () => {
   if (store.state.uiState.status === GameStatus.ON_GOING) {
