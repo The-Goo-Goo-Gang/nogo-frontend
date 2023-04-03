@@ -87,7 +87,7 @@ const runExec = (cmdStr: string, cmdPath: string, args: Array<string> = [], onSu
   }
 }
 function startServer (port = 5000) {
-  const cmdStr = 'server.exe'
+  const cmdStr = './nogo-server'
   const cmdPath = './server'
   const promise = new Promise<boolean>((resolve, reject) => {
     runExec(cmdStr, cmdPath, [`${port}`], () => resolve(true))
