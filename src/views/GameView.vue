@@ -21,8 +21,11 @@
           :is-playing="isOurPlayerPlaying" :show-timer="isOurPlayerPlaying" :reverse="true" />
       </div>
     </div>
-    <!-- <div class="game-right-container right">
-    </div> -->
+    <div class="game-right-container right">
+      <div class="game-actions">
+        <button class="game-action-btn fill" @click="giveUp">认输</button>
+      </div>
+    </div>
   </div>
   <div class="game-result" :class="showGameResult ? ['show'] : ['hide']">
     <div class="game-result-content">
@@ -41,7 +44,7 @@ import PlayerIndicator from '@/components/PlayerIndicator.vue'
 import GameChessboard from '@/components/GameChessboard.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
 import { useStore } from '@/store'
-import { Chess, GameStatus, LocalGameType, PlayerType } from '@/const'
+import { Chess, GameStatus, LocalGameType, OpCode, PlayerType } from '@/const'
 import { computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -53,12 +56,20 @@ const restartGame = () => {
 }
 
 const onChessClicked = (x: number, y: number) => {
-  console.log(x, y, (store.state.uiState.game?.chessboard[x] || [])[y] || Chess.None)
-  store.dispatch('doMove', { x, y })
+  if (store.state.uiState.status === GameStatus.ON_GOING) {
+    console.log('onChessClicked', x, y, (store.state.uiState.game?.chessboard[x] || [])[y] || Chess.None)
+    store.dispatch('doMove', { x, y })
+  }
 }
 
 const returnHome = () => {
   router.push('/')
+}
+
+const giveUp = () => {
+  if (store.state.uiState.status === GameStatus.ON_GOING) {
+    window.electronAPI.sendData(OpCode.GIVEUP_OP)
+  }
 }
 
 const showGameResult = computed(() => store.state.uiState.status === GameStatus.GAME_OVER && store.state.uiState.game_result.winner !== Chess.None)
@@ -81,7 +92,7 @@ const winnerName = computed(() => {
     return ''
   }
 })
-const timeout = computed(() => store.state.uiState.game?.metadata.turn_timeout || 10)
+const timeout = computed(() => store.state.uiState.game?.metadata.turn_timeout || 60)
 
 const onTimeout = () => {
   store.dispatch('timeout')
@@ -116,7 +127,6 @@ onMounted(() => {
 
 .game-result {
   position: absolute;
-  z-index: 2;
   top: 0;
   left: 0;
   display: flex;
@@ -130,7 +140,7 @@ onMounted(() => {
   backdrop-filter: blur(16px);
 
   &.show {
-    z-index: 2;
+    z-index: 999;
     opacity: 1;
     backdrop-filter: blur(16px);
   }
@@ -177,16 +187,17 @@ onMounted(() => {
   display: inline-flex;
   flex-direction: column;
   justify-content: flex-end;
-  flex: 1;
+  // flex: 1;
 }
 
 .grid {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  align-items: stretch;
-  justify-content: space-around;
+  align-items: center;
+  justify-content: center;
   padding: 0em;
+  gap: 16px;
 }
 
 .game-container {

@@ -62,7 +62,15 @@ $bezier: cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
     color: white;
-    background-color: $theme-color;
+    background-color: rgba($color: $theme-color, $alpha: 0.75)!important;
+  }
+
+  &:active {
+    background-color: $theme-color!important;
+  }
+
+  &.fill {
+    background-color: rgba($color: #FFFFFF, $alpha: 0.5);
   }
 }
 </style>
