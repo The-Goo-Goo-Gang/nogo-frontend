@@ -41,6 +41,12 @@ async function createWindow () {
     if (window) window.close()
   })
 
+  ipcMain.on('minimize', e => {
+    const webContents = e.sender
+    const window = BrowserWindow.fromWebContents(webContents)
+    if (window) window.minimize()
+  })
+
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string)

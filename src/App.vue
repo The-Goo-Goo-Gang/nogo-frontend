@@ -4,11 +4,26 @@
     <router-view />
   </div>
   <div id="title-bar">
-    <span class="title-text">NoGo 不围棋</span>
+    <div class="title-bar-content">
+      <div class="side-spacer"></div>
+      <span class="title-text">NoGo 不围棋</span>
+      <div class="spacer"></div>
+      <div class="title-bar-btns">
+        <div class="title-bar-btn title-bar-btn-info" @click="minimize">
+          <WindowMinimizeIcon />
+        </div>
+        <div class="title-bar-btn title-bar-btn-warning" @click="exit">
+          <CloseIcon />
+        </div>
+      </div>
+      <div class="side-spacer"></div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import CloseIcon from 'vue-material-design-icons/Close.vue'
+import WindowMinimizeIcon from 'vue-material-design-icons/WindowMinimize.vue'
 import { onMounted } from 'vue'
 import { OpCode } from './const'
 import { useStore } from './store'
@@ -22,6 +37,14 @@ onMounted(() => {
     }
   })
 })
+
+const exit = () => {
+  window.electronAPI.send('exit')
+}
+
+const minimize = () => {
+  window.electronAPI.send('minimize')
+}
 </script>
 
 <style lang="scss">
@@ -31,18 +54,64 @@ onMounted(() => {
 #title-bar {
   user-select: none;
   -webkit-app-region: drag;
-  padding: 16px;
   position: fixed;
   left: 0;
   top: 0;
+  right: 0;
   z-index: 9;
   width: 100%;
-  display: flex;
-  flex-direction: row;
+
+  .title-bar-content {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    padding: 16px 0;
+  }
+
+  .title-bar-btns {
+    display: inline-flex;
+    gap: 8px;
+    flex-direction: row;
+  }
 
   .title-text {
     font-weight: bold;
     font-size: 14px;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+
+  .side-spacer {
+    width: 16px;
+  }
+
+  .title-bar-btns {
+    -webkit-app-region: no-drag;
+  }
+
+  .title-bar-btn {
+    cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease;
+    position: relative;
+    height: 1em;
+    border-radius: 50%;
+
+    & > .material-design-icon {
+      height: 1em;
+      bottom: 0.125em;
+    }
+
+    &.title-bar-btn-warning:hover {
+      background-color: #D50000;
+      color: white;
+    }
+
+    &.title-bar-btn-info:hover {
+      background-color: #0091EA;
+      color: white;
+    }
   }
 }
 
