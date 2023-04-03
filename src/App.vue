@@ -1,5 +1,5 @@
 <template>
-  <div class="game-background" style="background: url('/img/background.jpeg');"></div>
+  <div class="game-background" style="background-image: url('/img/background.jpeg');"></div>
   <div class="game">
     <router-view />
   </div>
