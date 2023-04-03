@@ -25,6 +25,7 @@
     "vue": "^3.2.13",
     "vue-material-design-icons": "^5.2.0",
     "vue-router": "^4.0.3",
+    "vue3-lottie": "^2.5.0",
     "vuex": "^4.0.0"
   },
   "devDependencies": {
