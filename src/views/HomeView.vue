@@ -61,6 +61,8 @@ $bezier: cubic-bezier(0.4, 0, 0.2, 1);
   transition: color 0.3s $bezier, background .3s $bezier;
 
   &:not(.disabled) {
+    cursor: pointer;
+
     &:hover {
       color: white;
       background-color: rgba($color: $theme-color, $alpha: 0.75)!important;
