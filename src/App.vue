@@ -1,5 +1,5 @@
 <template>
-  <div class="game-background"></div>
+  <div class="game-background" style="background: url('/img/background.jpeg');"></div>
   <div class="game">
     <router-view />
   </div>
@@ -67,7 +67,7 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   position: absolute;
-  background: url("~@/assets/background.jpeg");
+  // background: url("~@/assets/background.jpeg");
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
