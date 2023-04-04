@@ -31,7 +31,7 @@
     <div class="game-result-content">
       <h3>Game Over!</h3>
       <p>{{ winnerName }}获胜</p>
-      <p>原因：{{ winReasonText }}</p>
+      <p v-if="false">原因：{{ winReasonText }}</p>
       <div class="game-actions">
         <button class="game-action-btn" @click="restartGame">再来一局</button>
         <button class="game-action-btn" @click="returnHome">返回首页</button>
