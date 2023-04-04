@@ -1,4 +1,5 @@
-# nogo-frontend
+# 2023 程序设计 Ⅱ 大作业：不围棋
+这是 Team 2 的前端部分仓库
 
 ## Project setup
 ```
@@ -7,12 +8,12 @@ npm install
 
 ### Compiles and hot-reloads for development
 ```
-npm run serve
+npm run electron:serve
 ```
 
 ### Compiles and minifies for production
 ```
-npm run build
+npm run electron:build
 ```
 
 ### Lints and fixes files
