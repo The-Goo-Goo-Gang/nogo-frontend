@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, Notification } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 import { ChildProcess, spawn } from 'child_process'
@@ -12,6 +12,17 @@ import { NetworkData } from './network/data'
 import { OpCode } from './const'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
+
+const log = (...args: any[]) => {
+  console.log(...args)
+  // new Notification({
+  //   title: 'log',
+  //   body: args.join(' ')
+  // }).show()
+  BrowserWindow.getAllWindows().forEach(window => {
+    window.webContents.send('log', ...args)
+  })
+}
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -56,6 +67,7 @@ async function createWindow () {
     createProtocol('app')
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
+    // win.webContents.openDevTools()
   }
 
   return win
@@ -68,21 +80,21 @@ const runExec = (cmdStr: string, cmdPath: string, args: Array<string> = [], onSu
   if (serverProcess != null) {
     // 启动成功的输出
     if (serverProcess.stdout != null) {
-      console.log('launch server success')
+      log('launch server success')
       onSuccess()
       serverProcess.stdout.on('data', function (data: string) {
-        console.log('stdout: ' + data)
+        log('stdout: ' + data)
       })
     }
     // 发生错误的输出
     if (serverProcess.stderr != null) {
       serverProcess.stderr.on('data', function (data: string) {
-        console.log('stderr: ' + data)
+        log('stderr: ' + data)
       })
     }
     // 退出后的输出
     serverProcess.on('close', function (code: string) {
-      console.log('out code: ' + code)
+      log('out code: ' + code)
     })
   }
 }
@@ -97,14 +109,15 @@ function startServer (port = 5000) {
 
 let client: Socket | null = null
 const stick = new Stick()
-function connectToBackend (port = 5000, ipAddress = '127.0.0.1') {
+function connectToBackend (onSuccess: () => void, port = 5000, ipAddress = '127.0.0.1') {
   client = new Socket()
   client.connect(port, ipAddress, () => {
-    console.log('connect success')
     if (client) {
+      log('connect success')
+      onSuccess()
       client.on('data', (data: Buffer) => {
         const str = data.toLocaleString()
-        // console.log('onData raw', str)
+        // log('onData raw', str)
         stick.pushData(str)
       })
     }
@@ -113,12 +126,12 @@ function connectToBackend (port = 5000, ipAddress = '127.0.0.1') {
   ipcMain.on('sendData', (e, opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
     const data = JSON.stringify(new NetworkData(opCode, data1, data2)) + '\n'
     if (client) {
-      console.log('sendData', data)
+      log('sendData', data)
       client.write(data)
     }
   })
   stick.onData(data => {
-    console.log('onData', data)
+    log('onData', data)
     try {
       const parsedData: NetworkData = JSON.parse(data)
       if (parsedData.op) {
@@ -132,6 +145,7 @@ function connectToBackend (port = 5000, ipAddress = '127.0.0.1') {
 
 function disconnectFromBackend () {
   if (client) {
+    client.end()
     client.destroy()
     client = null
   }
@@ -142,6 +156,8 @@ function stopServer () {
     serverProcess.kill('SIGINT')
   }
 }
+
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
 
 app.on('quit', () => {
   disconnectFromBackend()
@@ -177,8 +193,9 @@ app.on('ready', async () => {
   }
   await startServer()
   setTimeout(() => {
-    connectToBackend()
-    createWindow()
+    connectToBackend(() => {
+      createWindow()
+    })
   }, 500)
 })
 

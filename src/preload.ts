@@ -16,5 +16,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   exit: () => {
     ipcRenderer.send('exit')
+  },
+  onLog: (listener: (...args: any[]) => void) => {
+    ipcRenderer.on('log', (_, ...args: any[]) => {
+      listener(...args)
+    })
   }
 })

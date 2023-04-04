@@ -12,3 +12,7 @@ createApp(App)
   .use(router)
   .use(Vue3Lottie, { name: 'Vue3Lottie' })
   .mount('#app')
+
+window.electronAPI.onLog((...args: any[]) => {
+  console.log(...args)
+})
