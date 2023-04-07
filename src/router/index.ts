@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import GameView from '../views/GameView.vue'
+import StartLocalGameView from '../views/StartLocalGameView.vue'
 import SettingsView from '../views/SettingsView.vue'
 
 const routes: Array<RouteRecordRaw> = [
@@ -13,6 +14,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/game',
     name: 'game',
     component: GameView
+  },
+  {
+    path: '/start/local',
+    name: 'startLocalGame',
+    component: StartLocalGameView
   },
   {
     path: '/settings',

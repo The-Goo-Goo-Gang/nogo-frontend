@@ -10,11 +10,8 @@
 </template>
 
 <script lang="ts" setup>
-import { LocalGameType } from '@/const'
-import { useStore } from '@/store'
 import { useRouter } from 'vue-router'
 
-const store = useStore()
 const router = useRouter()
 
 const exit = () => {
@@ -22,8 +19,7 @@ const exit = () => {
 }
 
 const startLocalGame = () => {
-  store.dispatch('startLocalGame', { type: LocalGameType.PVP, size: 9 })
-  router.push('/game')
+  router.push('/start/local')
 }
 
 const goToSettings = () => {
