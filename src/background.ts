@@ -18,10 +18,6 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 
 const log = (...args: any[]) => {
   console.log(...args)
-  // new Notification({
-  //   title: 'log',
-  //   body: args.join(' ')
-  // }).show()
   BrowserWindow.getAllWindows().forEach(window => {
     window.webContents.send('log', ...args)
   })
@@ -51,18 +47,6 @@ async function createWindow () {
     titleBarStyle: 'hidden',
     frame: false,
     icon: './public/favicon.ico'
-  })
-
-  ipcMain.on('exit', e => {
-    const webContents = e.sender
-    const window = BrowserWindow.fromWebContents(webContents)
-    if (window) window.close()
-  })
-
-  ipcMain.on('minimize', e => {
-    const webContents = e.sender
-    const window = BrowserWindow.fromWebContents(webContents)
-    if (window) window.minimize()
   })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -128,13 +112,6 @@ function connectToBackend (onSuccess: () => void, port = 5000, ipAddress = '127.
     }
     // client.destroy()
   })
-  ipcMain.on('sendData', (e, opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
-    const data = JSON.stringify(new NetworkData(opCode, data1, data2)) + '\n'
-    if (client) {
-      log('sendData', data)
-      client.write(data)
-    }
-  })
   stick.onData(data => {
     log('onData', data)
     try {
@@ -193,6 +170,16 @@ app.whenReady().then(async () => {
     callback(path.join(app.getPath('userData'), decodeURI(path.normalize(url))))
   })
 
+  ipcMain.on('exit', e => {
+    const webContents = e.sender
+    const window = BrowserWindow.fromWebContents(webContents)
+    if (window) window.close()
+  })
+  ipcMain.on('minimize', e => {
+    const webContents = e.sender
+    const window = BrowserWindow.fromWebContents(webContents)
+    if (window) window.minimize()
+  })
   ipcMain.on('setBgmFile', (e, filePaths: Array<string>) => {
     const backgroundMusicFolder = path.join(app.getPath('userData'), 'background-music')
     if (!fs.existsSync(backgroundMusicFolder)) {
@@ -209,6 +196,13 @@ app.whenReady().then(async () => {
       })
     })
     e.sender.send('setBgmFile', filePaths.map((filePath, index) => encodeURI(`nogo://background-music/${changeFileName(path.basename(filePath), `${index}`)}`)))
+  })
+  ipcMain.on('sendData', (e, opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
+    const data = JSON.stringify(new NetworkData(opCode, data1, data2)) + '\n'
+    if (client) {
+      log('sendData', data)
+      client.write(data)
+    }
   })
 
   if (isDevelopment && !process.env.IS_TEST) {

@@ -29,7 +29,7 @@ import { Chess, PlayerType } from '@/const'
 import HourglassAnimJSON from '@/assets/Hourglass_2.json'
 import { Vue3Lottie } from 'vue3-lottie'
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   player: Player,
   isPlaying?: boolean,
 }>(), {
