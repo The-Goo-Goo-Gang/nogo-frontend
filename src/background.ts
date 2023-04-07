@@ -12,6 +12,7 @@ import { Stick } from './stick'
 import { NetworkData } from './network/data'
 import { OpCode } from './const'
 import { changeFileName } from './utils/file'
+import { getPortPromise } from 'portfinder'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -218,11 +219,13 @@ app.whenReady().then(async () => {
       console.error('Vue Devtools failed to install:', e)
     }
   }
-  await startServer()
+  const port = await getPortPromise({ port: 5000 })
+  log('start server at port', port)
+  await startServer(port)
   setTimeout(() => {
     connectToBackend(() => {
       createWindow()
-    })
+    }, port)
   }, 500)
 })
 
