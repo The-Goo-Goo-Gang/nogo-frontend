@@ -21,5 +21,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('log', (_, ...args: any[]) => {
       listener(...args)
     })
+  },
+  setBgmFile: (path: Array<string>) => {
+    ipcRenderer.send('setBgmFile', path)
+  },
+  onSetBgmFile: (listener: (path: Array<string>) => void) => {
+    ipcRenderer.on('setBgmFile', (_, path: Array<string>) => {
+      listener(path)
+    })
   }
 })

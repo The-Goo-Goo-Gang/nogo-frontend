@@ -1,15 +1,17 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, Notification } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 import { ChildProcess, spawn } from 'child_process'
 import { Socket } from 'net'
 import path from 'path'
+import fs from 'fs'
 import { Stick } from './stick'
 import { NetworkData } from './network/data'
 import { OpCode } from './const'
+import { changeFileName } from './utils/file'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -23,6 +25,9 @@ const log = (...args: any[]) => {
     window.webContents.send('log', ...args)
   })
 }
+
+app.setPath('userData', path.join(app.getPath('appData'), 'NoGo'))
+app.setPath('sessionData', path.join(app.getPath('userData'), 'Session Data'))
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -67,7 +72,6 @@ async function createWindow () {
     createProtocol('app')
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
-    // win.webContents.openDevTools()
   }
 
   return win
@@ -101,7 +105,7 @@ const runExec = (cmdStr: string, cmdPath: string, args: Array<string> = [], onSu
 function startServer (port = 5000) {
   const cmdStr = './nogo-server'
   const cmdPath = './server'
-  const promise = new Promise<boolean>((resolve, reject) => {
+  const promise = new Promise<boolean>(resolve => {
     runExec(cmdStr, cmdPath, [`${port}`], () => resolve(true))
   })
   return promise
@@ -182,11 +186,34 @@ app.on('activate', () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', async () => {
+app.whenReady().then(async () => {
+  protocol.registerFileProtocol('nogo', (request, callback) => {
+    const url = request.url.substring(7)
+    callback(path.join(app.getPath('userData'), decodeURI(path.normalize(url))))
+  })
+
+  ipcMain.on('setBgmFile', (e, filePaths: Array<string>) => {
+    const backgroundMusicFolder = path.join(app.getPath('userData'), 'background-music')
+    if (!fs.existsSync(backgroundMusicFolder)) {
+      fs.mkdirSync(backgroundMusicFolder)
+    }
+    filePaths.forEach((filePath, index) => {
+      const fileName = changeFileName(path.basename(filePath), `${index}`)
+      fs.copyFile(filePath, path.join(backgroundMusicFolder, fileName), (err) => {
+        if (err) {
+          log('copy file error', err)
+          return
+        }
+        log('copy file success')
+      })
+    })
+    e.sender.send('setBgmFile', filePaths.map((filePath, index) => encodeURI(`nogo://background-music/${changeFileName(path.basename(filePath), `${index}`)}`)))
+  })
+
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {
-      await installExtension(VUEJS3_DEVTOOLS)
+      await installExtension('nhdogjmejiglipccpnnnanhbledajbpd')
     } catch (e) {
       console.error('Vue Devtools failed to install:', e)
     }

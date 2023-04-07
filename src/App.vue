@@ -3,20 +3,30 @@
   <div class="game">
     <router-view />
   </div>
-  <div id="title-bar">
-    <div class="title-bar-content">
+  <div id="app-title-bar">
+    <div class="app-title-bar-content">
       <div class="side-spacer"></div>
       <span class="title-text">NoGo 不围棋</span>
       <div class="spacer"></div>
-      <div class="title-bar-btns">
-        <div class="title-bar-btn title-bar-btn-info" @click="minimize">
+      <div class="app-title-bar-btns">
+        <div class="app-title-bar-btn app-title-bar-btn-info" @click="minimize">
           <WindowMinimizeIcon />
         </div>
-        <div class="title-bar-btn title-bar-btn-warning" @click="exit">
+        <div class="app-title-bar-btn app-title-bar-btn-warning" @click="exit">
           <WindowCloseIcon />
         </div>
       </div>
       <div class="side-spacer"></div>
+    </div>
+  </div>
+  <div class="bgm-player-container" v-if="shouldPlayBgm">
+    <div class="bgm-player-content">
+      <MusicPlayer background-color="rgba(255, 255, 255, 0.6)" :volume="store.state.config.bgmVolume" autoplay
+        class="bgm-player" :songs="bgmPlaylist" />
+    </div>
+    <div class="bgm-player-indicator">
+      <span>BGM</span>
+      <ChevronRightIcon class="bgm-player-indicator-icon" />
     </div>
   </div>
 </template>
@@ -24,11 +34,65 @@
 <script setup lang="ts">
 import WindowMinimizeIcon from 'vue-material-design-icons/WindowMinimize.vue'
 import WindowCloseIcon from 'vue-material-design-icons/WindowClose.vue'
-import { onMounted } from 'vue'
-import { OpCode } from './const'
+import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
+import MusicPlayer from './components/player/MusicPlayer.vue'
+import { computed, onMounted, Ref, ref, watch } from 'vue'
+import { BackgroundMusicType, OpCode } from './const'
 import { useStore } from './store'
+import { SongData } from './components/player/data'
 
 const store = useStore()
+
+const playBgm = ref(false)
+const bgmPlaylist: Ref<Array<SongData>> = ref([])
+const shouldPlayBgm = computed(() => {
+  return playBgm.value && bgmPlaylist.value.length > 0
+})
+
+const fetchPlaylist = () => {
+  if (store.state.config.bgmType === BackgroundMusicType.LOCAL && store.state.config.bgmFilePath) {
+    try {
+      const bgmFiles: Array<string> = JSON.parse(store.state.config.bgmFilePath)
+      if (bgmFiles.length === 0) {
+        return
+      }
+      bgmPlaylist.value = bgmFiles.map((path) => {
+        return {
+          name: '本地音乐',
+          src: path
+        }
+      })
+    } catch (err) {
+      console.error(err)
+    }
+    return
+  }
+  fetch(`https://server.huanchengfly.top/api/nogo/music/songs?ids=${store.state.config.bgmSongsId}`)
+    .then(res => res.json())
+    .then(res => {
+      if (!res.success) {
+        throw new Error(res.error)
+      }
+      return res
+    })
+    .then(res => {
+      bgmPlaylist.value = res.songs
+    })
+    .catch(err => {
+      console.error(err)
+    })
+}
+
+const startPlayBgm = () => {
+  playBgm.value = true
+  if (bgmPlaylist.value.length === 0) {
+    fetchPlaylist()
+  }
+}
+
+const stopPlayBgm = () => {
+  playBgm.value = false
+}
 
 onMounted(() => {
   window.electronAPI.onData((opCode, data1, data2) => {
@@ -36,18 +100,36 @@ onMounted(() => {
       store.commit('updateState', JSON.parse(data2))
     }
   })
-  const context = new AudioContext()
-  fetch('https://server.huanchengfly.top/api/netease/song/url?data=7CF2AA86713720393DBF0F8C688130DDED1B51EB9B6A9E835A7711E879D51CB55A351EE209952D4CFE9D93C61BE6E43DD9CC765D5734A41C8BC55D14F18308D2C65D6660906CFB9AEF764B9624CC9D89A597DD3645FB2E0C766846D1D8069F006C20EF0752CC9DD481BDF494B70BFD34F2EE933F18EAD91DCE629B9960A8755A1495F2F5BD2BCCE0BF5D980276DBC67950774B1E748834209B573FCF1DF1767ECBEE80118A67B89F9C48AB44B7DAAD502C00D8AF9CBB3560BDD5176294C15C2717D894284956E2B42DE1470D04E325AFF7CB754DE4AFD5B6FA179E783373D16FD5874C365E0B5C3AE5B80BD9CFBFC3AB8E64D8251CF0CD37EFB73C299090BDDB3DE6DE356ED29DE0C787695482A9F6DD841413A8176F40C92D81BF91BC5C71DFA4C5040AAD0E1F77B9C7B980C02F262A955122D0C6171DC23F6060DBA54E80D572586B9710C6F0F4731E5DFE075F51F99CA10663204A67C395755D9645A8C4AB8A6136719CDA1CA467B8F9BA529BE2EA8CB9B68A9A84417ACC1AD8B3B67F256FD4574F247CEF0721298E09879CBDB778FCE99CAD8CFEC50EF674D5C1B5E0872B34D6C2834A1682BF570C0A1A00578A29C033E8AFD951B629EEC105041E0669B31FB586B59E3EB3E468D19344E803E53CDDC60805956C3299E8E1B005A9AF081F88A7FF8615366DB71916C7F0D7E899B3BAA066188458EA86CFE08FFA3F3D2DFDC9206448AE1FCEB0E662EC70143CFCA5308DD3024B17B730D7EFC8294CE06E756DD361CDA94741F150CD8F55E3FFB203AEFE3AB0BCCB55558998A6334C81742A9F3A30CBA714651DBA94291B253A00FDDE176A63B9FB00677B052F860B30548B32830E71DF0E9B7191764864B4C9FA3636518599A23CDDE235F03215B0B60E6925BE09E25C9DFCC615C82A14A3ED93405A80701B807822183B399935486B04FD36BC7BED95B392274466D6A34C005810ED47F703D9E137307441AA6C9AE6F01F55731C12EEF630487819A033A137794019AC8DFB0BFFA62171F9EF6DC20FDB53D7E7A1D1B1A2B27D9C438C8C980D9A03F0ED2CB664EC60493A8CBEAB9A53E1289326059925D6A1851762146E2CDC0651DCE7E674A3896103173090C6E84CF0892E89542EFFBFAA28CFA846A6DB6807802596B767FC4E87DD54E5A39894E642C067A24C0266DA2AD23CF7494CD9C377AD0AF94E1FEFE997A3C389BE29275AA1D00DB7C3A1BDFE111F75FDD3D770F8308F44A421F096276A509574C8F25143F3DD3D1FD13F1652E205E65178C39B20E487D1E1131A83B1D0C2E4BADC61BE540D286C7C7DA64B04F115A331E8294EF62B4BF1C594622E0C2F019C10A59F3EE3ADBC7CFCAA541B3E1C5617CE954C0CD553112A6FFD3C6E714EFC8979B488FE5D2B2F9114F5B5CA419EDCEA2FA1627F26B0EC199DA40B38E3FB592A412A5605060BC59C4667F70CC5FDDD4B80FC85D64C2279B3854BBA36DBAC830B34B49081CB8DE4A02369AF22C2B64EF32D806B76A6AD4E762EEE2B7275FA59937D0918BB3E124466D28875509D2630EB57614400C8018B7DFB833F02762184B63C8BDE30878B7E3543FF570000484DC261677E352045099A015DB371B7DEC0FC705F5204267351932BD0E87E0D56E5B6F32AC9B36D050DDAEFC373ACADCBED6023B68FF96F194D0A60A621378E5E3BF4082539BBD90CE9E1ADB61941E16017C063D689D11CA35230BAF22E9A3BF7E5C4A0900212D04FBA75368847D3D230FAF412309A19030A5B3C9F10338EFBE067A1A15693EBF47A91C1080AD91535AE2983C6A10175216E80F201D651F6AE2188DC55465F40DB472C5946F5BD127F8BBB215BB2E93586BA8319FD9672A672C426BE1FD3CD515738C38DB675B55F850327BC68BADDDD544362F1414822E3D89EE2B65115AB1BC136DCA6E569695989A168166C8E99242E90346769580455D065591FB6C67D9E56F11A1C8775724C53B0DE3B5FA34848704318BF4CCACA5A4C6C45A9A98F1E5840C9C20BB2FF8E03E561D3341AB5FAD223BE627DD85CB99E697733358D57C1F97DEC5D16D83E70395DA76685E71C75B71746AF0F9026F849B7DD4BB40A0294249588275F492D1ED0EF3E62C7B19482AF4EED10B88FBEC8D6CA917656CFBC85ECF9A9916F85FAFEED814947F3CC140764FE21D509D98D4BAA1ADE38AC6753B4BBD70220DC50F39C6ED94FB6733D572D245D11231EFE16379D84087BC0472A6492929588677A1E74D5CDB7D68232A94CFC2E3730B78BC62C0CEF048D27EF76148448ABE928BBA96BF27409310C9CF8BC6A06617E675B9A94A41B07D011A0C2F07F673E90813424AECD5266DFCF5920FFD5AAC870979806C0E44CC24BA9C501B6247FB297B899E335553B907F3EF8DC6C27DF430D38FE0E994B347ADDD726CDF5C0CDE82F7E6801BF2C8A378FFAA05C1D102C4DECCEAC8FEFA5258E4BCBF8FA18441E6C49F93198C94AD055183D0D534EEDEBA3AA75F38B2805F1E3189202B6CDE81492F9A6A50340BE681409937BC0F0AA21EEC0C9ED1921D03DED8E7003C5B2A6A729FFAA0318C1FBE7A1FB5347AF03259467EA2F222E76C266F2E66C2AA0E8A95EC2D070B8CF81BC78649367DB5C30ADCF4E7210520443C82A01FD58C007108185B58ADFFAECE73CC1A0553DF62B45DF238E8B4EC6D09DA20AE2E8AFB3DDB8DC2FC4E33C4B2A833B643AB6D5C3E8B0E326D3950D48B93D36D4340C73D7189C608366735B075B05BEADAD2C26995C1C03648A8F041E9E1318A518106262E8883020C4FF81EE68D4D786263E315D9751B03E6954215C59E57040BA24B4608A80460C3878574919BBC52E4FAC1BACDC42D1BE5A09D95FE7050D93259F3AB23FD5F417D8A0FA0DF883ED8E9A09C2D045F976990745ADB3B675FF1CE6C5C7FA6819B3AF16847CC5E23B67A3BB32D13C1FEEBE62044C118CFCDEB4915C8CB68B5C5BD396B162A28A4A50BF48BD59C797BC7874DD3A761D3158C13F8DF517952633D19B5A29C13793F3CB10478382671B38C115EFB4152A1D9F2807DCFAB27C41B2B18FBBCC7D7E6AF354917A73AABA35AD369B30DD0B9B158FF10B59F12BC052D61A098EB92607714B712C29C7374899D39446DE8F9B7439F6FF26B938CD4C7FA47B6AED102B2816BDF148CEDE6D8530CEF3C4DCC93719E3EC918E01A27714507A6CD7200B8E45B1FF62D11F78F5C4B210250EF0D7BFEDBD66C7FDBB2423F627EA1F499471F15DD5A92513E6A3EBCF832DC83A1DC7CD9095C6AA16EE5BB9EF0B57A0BDE37223B61D871D2B19E21A193DFC66909F8F2A47301053B86A5608FEFFA7A31F551964C08113FC9D7668DB2C42CFFF4BFB35741DE1BDA12EB6FCB110D6C1568D20D509E43766FD2FB98D1DAACABFFAF6E9505F51E5C6DEC7147605AE7E6C036E95E6129F53768736B2BB900FDB55E9ED51E36D1560989D956A834036BA22681D7C91710E48F5E2FA9363C5F3E5D1DEAD5C34B6A7301EB45B2D129A05FEDEFC1757E1A5CFEC4B043F005E8E22EACD9085EC6957EBC669AED41DCA9BB6127A97EDFC7497673E29DE151719CA8C9AB0BEFA9D0C51789E5A275E2C863A3EC19A1DF10A961AA467C9E041F1251D8D08D17E8406BB077972624DEA8EA1018683F8D7F3FE95B4538CBE6EB1876432C8369F6DF332B463E005E0FA56C6E0352054E5173313F793007A1969873EB576126AE2BC26833189D55F3CD6C325FDB085AD1D250B6187681A3178960D3BB8D16D6C420712D72F02F2485E23B8F5DD0486202BC212E2542FFB490A0C6BA1CE63380C76DB0E9CE3D2E5A0DFC44048FE1DB5EC3F025837790DA5FC41B22603F1077D18F2ADAA3BE31C47599DCDC0D97AFF64FB92B850DDCB2B58BD861151D005D102C593CB03C5256F5F79389711B85BC296D4419CA24F757A01D5A1577892C8FE73204EBA2180B12338CB6FCD10221CDE7FBDE38AC685954E9B35F159F37ECD567FB7F39DFBF0C8FC823D8EB50BC5774BCC1E39A7600BDE0D8EC2DAF7308D210D2D543CE3F0A6336E97D0BF9825C1D730DF6596A4EE066156&redirect=true')
-    .then(res => res.arrayBuffer())
-    .then(arr => context.decodeAudioData(arr))
-    .then(audioBuffer => {
-      const source = context.createBufferSource()
-      source.loop = true
-      source.buffer = audioBuffer
-      source.connect(context.destination)
-      source.start()
-    })
+  window.electronAPI.onSetBgmFile(path => {
+    store.dispatch('updateConfig', { bgmFilePath: JSON.stringify(path) })
+  })
+  if (store.state.config.bgm) {
+    startPlayBgm()
+  }
 })
+
+watch(
+  () => store.state.config.bgm,
+  (val) => {
+    if (val) startPlayBgm()
+    else stopPlayBgm()
+  }
+)
+
+watch(
+  () => store.state.config.bgmSongsId,
+  () => fetchPlaylist()
+)
+
+watch(
+  () => store.state.config.bgmType,
+  () => fetchPlaylist()
+)
+
+watch(
+  () => store.state.config.bgmFilePath,
+  () => fetchPlaylist()
+)
 
 const exit = () => {
   window.electronAPI.send('exit')
@@ -59,10 +141,7 @@ const minimize = () => {
 </script>
 
 <style lang="scss">
-@import '~normalize.css';
-@import 'vue-material-design-icons/styles.css';
-
-#title-bar {
+#app-title-bar {
   user-select: none;
   -webkit-app-region: drag;
   position: fixed;
@@ -72,14 +151,14 @@ const minimize = () => {
   z-index: 9;
   width: 100%;
 
-  .title-bar-content {
+  .app-title-bar-content {
     display: flex;
     justify-content: space-between;
     flex-direction: row;
     padding: 16px 0;
   }
 
-  .title-bar-btns {
+  .app-title-bar-btns {
     display: inline-flex;
     gap: 8px;
     flex-direction: row;
@@ -98,11 +177,11 @@ const minimize = () => {
     width: 16px;
   }
 
-  .title-bar-btns {
+  .app-title-bar-btns {
     -webkit-app-region: no-drag;
   }
 
-  .title-bar-btn {
+  .app-title-bar-btn {
     cursor: pointer;
     transition: background 0.3s ease, color 0.3s ease;
     position: relative;
@@ -114,12 +193,12 @@ const minimize = () => {
       bottom: 0.125em;
     }
 
-    &.title-bar-btn-warning:hover {
+    &.app-title-bar-btn-warning:hover {
       background-color: #D50000;
       color: white;
     }
 
-    &.title-bar-btn-info:hover {
+    &.app-title-bar-btn-info:hover {
       background-color: #0091EA;
       color: white;
     }
@@ -155,22 +234,75 @@ const minimize = () => {
 }
 
 .icon-2x {
-  height: 2em;
-  width: 2em;
+  height: 2em !important;
+  width: 2em !important;
 
   .material-design-icon__svg {
-    height: 2em;
-    width: 2em;
+    height: 2em !important;
+    width: 2em !important;
   }
 }
 
 .icon-3x {
-  height: 3em;
-  width: 3em;
+  height: 3em !important;
+  width: 3em !important;
 
   .material-design-icon__svg {
-    height: 3em;
-    width: 3em;
+    height: 3em !important;
+    width: 3em !important;
+  }
+}
+
+.bgm-player {
+  backdrop-filter: blur(16px);
+}
+
+.bgm-player-container {
+  z-index: 5;
+  position: fixed !important;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  transition: transform .2s ease;
+
+  .bgm-player-indicator {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    background-color: rgba($color: #FFFFFF, $alpha: 0.6);
+    opacity: 1;
+    color: rgba($color: #000000, $alpha: 0.7);
+    border-radius: 0 8px 8px 0;
+
+    >span {
+      width: 3em;
+      text-align: center;
+    }
+
+    .bgm-player-indicator-icon {
+      transition: transform .2s ease;
+      transform: rotate(0deg);
+      height: 1em;
+      width: 1em;
+    }
+
+    .material-design-icon__svg {
+      bottom: 0;
+    }
+  }
+
+  &:not(:hover) {
+    transform: translate(calc(-100% + 1em + 3em), calc(50% - 1em));
+  }
+
+  &:hover .bgm-player-indicator-icon {
+    transform: rotate(180deg);
   }
 }
 </style>

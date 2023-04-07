@@ -5,6 +5,9 @@ import { store, key } from './store'
 // import network from './network'
 import Vue3Lottie from 'vue3-lottie'
 import 'vue3-lottie/dist/style.css'
+import '@/styles/index.scss'
+import 'normalize.css'
+import 'vue-material-design-icons/styles.css'
 
 createApp(App)
   // .use(network)

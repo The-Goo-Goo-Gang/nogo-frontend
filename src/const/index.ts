@@ -1,3 +1,8 @@
+export enum BackgroundMusicType {
+  LOCAL,
+  NETEASE
+}
+
 export enum PlayerType {
   LocalHumanPlayer = 0,
   OnlineHumanPlayer,

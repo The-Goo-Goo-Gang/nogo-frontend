@@ -1,0 +1,191 @@
+@import './variables.scss';
+
+.game-home {
+  text-align: center;
+}
+
+.game-view {
+  background: rgba(255, 255, 255, 0.35);
+  padding: 32px;
+  border-radius: 8px;
+}
+
+.game-title {
+  margin-top: 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-image: linear-gradient(252deg, rgba($color: $theme-color, $alpha: 0.6) 0%, $theme-color 100%);
+  -webkit-text-fill-color: transparent;
+}
+
+.game-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  border-radius: 8px;
+}
+
+.game-action-btn {
+  border-radius: 8px;
+  padding: 8px;
+  background: none;
+  border: 0;
+  transition: color 0.3s $bezier, background .3s $bezier;
+
+  &:not(.disabled) {
+    cursor: pointer;
+
+    &:hover {
+      color: white;
+      background-color: rgba($color: $theme-color, $alpha: 0.75)!important;
+    }
+
+    &:active {
+      color: white;
+      background-color: $theme-color!important;
+    }
+  }
+
+  &.disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+  }
+
+  &.fill {
+    background-color: rgba($color: #FFFFFF, $alpha: 0.5);
+  }
+}
+
+.game-view-form-item-title + .game-view-form-item-content {
+  margin-top: 0.5rem;
+}
+
+.game-view-form-item + .game-view-form-item {
+  margin-top: 1rem;
+}
+
+.game-view-form-item-content-item-label {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: center;
+  padding: 0.5rem 0rem;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    margin-right: 0.5rem;
+  }
+
+  input[type='range'] {
+    //宽度
+    -webkit-appearance: none;
+    height: 0.5rem;
+    background: #d3d3d3;
+    outline: none;
+    border-radius: 0.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+
+    //滑块样式（蓝色）
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      background: $theme-color;
+      cursor: pointer;
+      transition: transform 0.2s, background .2s;
+
+      //按下时加一个变小动画和颜色变深（有过渡）
+      &:active {
+        transform: scale(0.9);
+        background: adjust-color($color: $theme-color, $lightness: -10%);
+      }
+
+      &:hover {
+        background: adjust-color($color: $theme-color, $lightness: -5%);
+      }
+    }
+  }
+
+  input[type='radio'] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 1px solid #d3d3d3;
+    background: #fff;
+    cursor: pointer;
+    transition: transform 0.2s, background .2s;
+
+    &[disabled] {
+      cursor: not-allowed;
+      background: #d3d3d3;
+    }
+
+    &:not([disabled]) {
+      &:checked {
+        background: $theme-color;
+
+        &:hover {
+          background: $theme-color;
+        }
+      }
+
+      &:hover {
+        background: adjust-color($color: $theme-color, $lightness: 15%);
+      }
+
+      &:active {
+        background: adjust-color($color: $theme-color, $lightness: -10%);
+        transform: scale(0.9);
+      }
+    }
+  }
+
+  input[type='text'] {
+    border: 1px solid #d3d3d3;
+    border-radius: 4px;
+    padding: 0.5rem;
+    width: 100%;
+    transition: all .2s ease;
+    outline: none;
+
+    &:focus {
+      border-color: $theme-color;
+      box-shadow: 0 0 0 2px rgba($color: $theme-color, $alpha: 0.2);
+    }
+  }
+}
+
+.game-view-form-item-content {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+
+  &.full-width {
+    width: 100%;
+    align-items: stretch;
+    align-content: stretch;
+
+    .game-view-form-item-content-item {
+      width: 100%;
+
+      .game-view-form-item-content-item-label {
+        align-items: stretch;
+        align-content: stretch;
+
+        input { flex: 1; }
+      }
+    }
+  }
+}
+
+.game-view-form {
+  padding: 16px;
+}

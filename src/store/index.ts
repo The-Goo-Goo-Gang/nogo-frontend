@@ -3,11 +3,13 @@ import { GlobalState } from './type'
 import { InjectionKey, reactive } from 'vue'
 import { Chess, GameStatus, LocalGameType, OpCode, PlayerType, WinType } from '@/const'
 import { UiState } from '@/state'
+import { DEFAULT_CONFIG, getConfigFromLocalStorage, NoGoConfig, NoGoConfigDiff } from '@/config'
 
 export const key: InjectionKey<Store<GlobalState>> = Symbol('globalState')
 
 export const store = createStore<GlobalState>({
   state: {
+    config: getConfigFromLocalStorage(),
     uiState: {
       is_gaming: false,
       status: GameStatus.NOT_PREPARED,
@@ -101,10 +103,13 @@ export const store = createStore<GlobalState>({
         state.uiState.game.chessboard[payload.x][payload.y] = payload.chess
         state.uiState.game.is_our_player_playing = !state.uiState.game.is_our_player_playing
       }
+    },
+    updateConfig (state, payload: NoGoConfig) {
+      state.config = payload
     }
   },
   actions: {
-    startLocalGame ({ commit }, payload: { type: LocalGameType, size: 9|11|13 }) {
+    startLocalGame ({ commit }, payload: { type: LocalGameType, size: 9|11|13, timeout: number }) {
       commit('startLocalGame')
       window.electronAPI.sendData(OpCode.START_LOCAL_GAME_OP, `${payload.type}`, `${payload.size}`)
     },
@@ -148,6 +153,17 @@ export const store = createStore<GlobalState>({
         const nowPlayerChess = nowPlayer.chess_type === Chess.Black ? 'b' : 'w'
         window.electronAPI.sendData(OpCode.LOCAL_GAME_TIMEOUT_OP, nowPlayerChess)
       }
+    },
+    updateConfig ({ commit, state }, payload: NoGoConfigDiff) {
+      console.log('update config diff', payload)
+      const newConfig: NoGoConfig = {
+        ...DEFAULT_CONFIG,
+        ...state.config,
+        ...payload
+      }
+      commit('updateConfig', newConfig)
+      console.log('update config', newConfig)
+      window.localStorage.setItem('config', JSON.stringify(newConfig))
     }
   },
   modules: {
