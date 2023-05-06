@@ -63,16 +63,17 @@ async function createWindow () {
 }
 
 let serverProcess: ChildProcess | null = null
-const runExec = (cmdStr: string, cmdPath: string, args: Array<string> = [], onSuccess: () => void) => {
+const runExec = (cmdStr: string, cmdPath: string, args: Array<string> = [], onSuccess?: (() => void) | null, onStdOut?: ((data: string) => void) | null) => {
   serverProcess = spawn(cmdStr, args, { cwd: cmdPath })
 
   if (serverProcess != null) {
     // 启动成功的输出
     if (serverProcess.stdout != null) {
       log('launch server success')
-      onSuccess()
+      if (onSuccess) onSuccess()
       serverProcess.stdout.on('data', function (data: string) {
         log('stdout: ' + data)
+        if (onStdOut) onStdOut(data)
       })
     }
     // 发生错误的输出
@@ -91,7 +92,11 @@ function startServer (port = 5000) {
   const cmdStr = './nogo-server'
   const cmdPath = './server'
   const promise = new Promise<boolean>(resolve => {
-    runExec(cmdStr, cmdPath, [`${port}`], () => resolve(true))
+    runExec(cmdStr, cmdPath, [`${port}`], null, data => {
+      if (data.includes('Serving on')) {
+        resolve(true)
+      }
+    })
   })
   return promise
 }
@@ -220,7 +225,7 @@ app.whenReady().then(async () => {
     connectToBackend(() => {
       createWindow()
     }, port)
-  }, 500)
+  }, 100)
 })
 
 // Exit cleanly on request from parent process in development mode.
