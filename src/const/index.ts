@@ -43,7 +43,12 @@ export enum OpCode {
   GIVEUP_END_OP,
   LEAVE_OP,
   CHAT_OP,
+  // -----Extend OpCode ------------
   START_LOCAL_GAME_OP = 100000,
   UPDATE_UI_STATE_OP,
-  LOCAL_GAME_TIMEOUT_OP
+  // Deprecated
+  LOCAL_GAME_TIMEOUT_OP,
+  LOCAL_GAME_MOVE_OP,
+  CONNECT_TO_REMOTE_OP,
+  CONNECT_RESULT_OP,
 }

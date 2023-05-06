@@ -15,7 +15,7 @@ export const store = createStore<GlobalState>({
       status: GameStatus.NOT_PREPARED,
       game: {
         chessboard: [[]],
-        is_our_player_playing: true,
+        now_playing: Chess.None,
         metadata: {
           size: 9,
           player_opposing: {
@@ -28,7 +28,7 @@ export const store = createStore<GlobalState>({
             type: PlayerType.LocalHumanPlayer,
             chess_type: Chess.Black
           },
-          turn_timeout: 60
+          timeout: 60
         },
         statistics: []
       },
@@ -101,7 +101,7 @@ export const store = createStore<GlobalState>({
       if (state.uiState.game) {
         if (state.uiState.game.chessboard[payload.x] == null) state.uiState.game.chessboard[payload.x] = []
         state.uiState.game.chessboard[payload.x][payload.y] = payload.chess
-        state.uiState.game.is_our_player_playing = !state.uiState.game.is_our_player_playing
+        state.uiState.game.now_playing = -state.uiState.game.now_playing
       }
     },
     updateConfig (state, payload: NoGoConfig) {
@@ -111,7 +111,7 @@ export const store = createStore<GlobalState>({
   actions: {
     startLocalGame ({ commit }, payload: { type: LocalGameType, size: 9|11|13, timeout: number }) {
       commit('startLocalGame')
-      window.electronAPI.sendData(OpCode.START_LOCAL_GAME_OP, `${payload.type}`, `${payload.size}`)
+      window.electronAPI.sendData(OpCode.START_LOCAL_GAME_OP, `${payload.timeout * 1000}`, `${payload.size}`)
     },
     startTimer ({ commit, state }, payload: { duration: number }) {
       if (state.timer.running) {
@@ -140,16 +140,26 @@ export const store = createStore<GlobalState>({
       if (state.uiState.game) {
         const nowChess = (state.uiState.game.chessboard[payload.x] || [])[payload.y] || Chess.None
         if (nowChess === Chess.None) {
-          const chess = state.uiState.game.is_our_player_playing ? state.uiState.game.metadata.player_our.chess_type : state.uiState.game.metadata.player_opposing.chess_type
+          const chess = state.uiState.game.now_playing === state.uiState.game.metadata.player_our.chess_type ? state.uiState.game.metadata.player_our.chess_type : state.uiState.game.metadata.player_opposing.chess_type
+          commit('doMove', { x: payload.x, y: payload.y, chess })
+          window.electronAPI.sendData(OpCode.MOVE_OP, `${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[payload.x]}${payload.y + 1}`, `${new Date().getTime()}`)
+        }
+      }
+    },
+    doLocalMove ({ commit, state }, payload: { x: number, y: number }) {
+      if (state.uiState.game) {
+        const nowChess = (state.uiState.game.chessboard[payload.x] || [])[payload.y] || Chess.None
+        if (nowChess === Chess.None) {
+          const chess = state.uiState.game.now_playing === state.uiState.game.metadata.player_our.chess_type ? state.uiState.game.metadata.player_our.chess_type : state.uiState.game.metadata.player_opposing.chess_type
           commit('doMove', { x: payload.x, y: payload.y, chess })
           const role = chess === Chess.Black ? 'b' : 'w'
-          window.electronAPI.sendData(OpCode.MOVE_OP, `${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[payload.x]}${payload.y + 1}`, role)
+          window.electronAPI.sendData(OpCode.LOCAL_GAME_MOVE_OP, `${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[payload.x]}${payload.y + 1}`, role)
         }
       }
     },
     timeout ({ state }) {
       if (state.uiState.game) {
-        const nowPlayer = state.uiState.game.is_our_player_playing ? state.uiState.game.metadata.player_our : state.uiState.game.metadata.player_opposing
+        const nowPlayer = state.uiState.game.now_playing === state.uiState.game.metadata.player_our.chess_type ? state.uiState.game.metadata.player_our : state.uiState.game.metadata.player_opposing
         const nowPlayerChess = nowPlayer.chess_type === Chess.Black ? 'b' : 'w'
         window.electronAPI.sendData(OpCode.LOCAL_GAME_TIMEOUT_OP, nowPlayerChess)
       }

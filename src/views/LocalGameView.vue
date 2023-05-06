@@ -59,7 +59,7 @@ const restartGame = () => {
 const onChessClicked = (x: number, y: number) => {
   if (store.state.uiState.status === GameStatus.ON_GOING) {
     console.log('onChessClicked', x, y, (store.state.uiState.game?.chessboard[x] || [])[y] || Chess.None)
-    store.dispatch('doMove', { x, y })
+    store.dispatch('doLocalMove', { x, y })
   }
 }
 
@@ -68,24 +68,21 @@ const returnHome = () => {
 }
 
 const giveUp = () => {
-  if (store.state.uiState.status === GameStatus.ON_GOING) {
-    window.electronAPI.sendData(OpCode.GIVEUP_OP)
+  if (store.state.uiState.game != null && store.state.uiState.status === GameStatus.ON_GOING) {
+    const chess = store.state.uiState.game.now_playing === store.state.uiState.game.metadata.player_our.chess_type ? store.state.uiState.game.metadata.player_our.chess_type : store.state.uiState.game.metadata.player_opposing.chess_type
+    const role = chess === Chess.Black ? 'b' : 'w'
+    window.electronAPI.sendData(OpCode.GIVEUP_OP, role)
   }
-}
-
-const onTimeout = () => {
-  store.dispatch('timeout')
 }
 
 const showGameResult = computed(() => store.state.uiState.status === GameStatus.GAME_OVER && store.state.uiState.game_result.winner !== Chess.None)
 const chessboard = computed(() => store.getters.chessboard)
-const isOurPlayerPlaying = computed(() => store.state.uiState.game?.is_our_player_playing)
+const isOurPlayerPlaying = computed(() => store.state.uiState.game?.now_playing === store.state.uiState.game?.metadata.player_our.chess_type)
 const nowPlayer = computed(() => {
   if (!store.state.uiState.game) return null
-  return store.state.uiState.game.is_our_player_playing ? store.state.uiState.game.metadata.player_our : store.state.uiState.game.metadata.player_opposing
+  return store.state.uiState.game.now_playing === store.state.uiState.game.metadata.player_our.chess_type ? store.state.uiState.game.metadata.player_our : store.state.uiState.game.metadata.player_opposing
 })
 const timerProgress = computed(() => store.getters.timerProgress)
-const timerEnd = computed(() => store.getters.timerEnd)
 const winnerName = computed(() => {
   const winner = store.state.uiState.game_result.winner
   if (winner === Chess.Black) {
@@ -118,17 +115,11 @@ const winReasonText = computed(() => {
     return ''
   }
 })
-const timeout = computed(() => store.state.uiState.game?.metadata.turn_timeout || 60)
+const timeout = computed(() => store.state.uiState.game?.metadata.timeout || 30)
 
 watch(nowPlayer, () => {
   if (store.state.uiState.status === GameStatus.ON_GOING) {
     store.dispatch('startTimer', { duration: timeout.value })
-  }
-})
-watch(timerEnd, (isEnd) => {
-  console.log('timerEnd change ', isEnd)
-  if (isEnd && store.state.uiState.status === GameStatus.ON_GOING) {
-    onTimeout()
   }
 })
 

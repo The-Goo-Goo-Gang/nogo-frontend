@@ -11,7 +11,7 @@ export interface GameMetadata {
   size: 9 | 11 | 13,
   player_opposing: Player,
   player_our: Player,
-  turn_timeout: number
+  timeout: number
 }
 
 export interface DynamicStatistics {
@@ -22,7 +22,7 @@ export interface DynamicStatistics {
 
 export interface GameState {
   chessboard: Array<Array<Chess>>,
-  is_our_player_playing: boolean,
+  now_playing: Chess,
   metadata: GameMetadata,
   statistics: Array<DynamicStatistics>
 }
