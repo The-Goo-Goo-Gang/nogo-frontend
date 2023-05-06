@@ -1,7 +1,7 @@
 <template>
   <div>
     <canvas ref="canvas" class="game-chessboard-canvas" id="chessboardCanvas" :width="width" :height="height"
-      :style="canvasStyle" @click="canvasClicked">
+      :style="canvasStyle" @click="canvasClicked" @pointermove="onPointerMove">
     </canvas>
   </div>
 </template>
@@ -61,10 +61,16 @@ function clearCanvas () {
   }
 }
 
+const calcChessPosition = (x: number, y: number): { x: number, y: number } => {
+  return {
+    x: Math.max(0, Math.min(props.size - 1, Math.floor((y - widthDiff.value / 2) / columnSize.value))),
+    y: Math.max(0, Math.min(props.size - 1, Math.floor((x - heightDiff.value / 2) / rowSize.value)))
+  }
+}
+
 function canvasClicked (e: MouseEvent) {
   if (canvas.value != null) {
-    const x = Math.floor((e.offsetY - heightDiff.value / 2) / rowSize.value)
-    const y = Math.floor((e.offsetX - widthDiff.value / 2) / columnSize.value)
+    const { x, y } = calcChessPosition(e.offsetX, e.offsetY)
     // console.log(x, y, chesses.value[x][y])
     emit('chess-clicked', x, y)
     // if (chesses.value[x][y] === Chess.None) {
@@ -75,6 +81,15 @@ function canvasClicked (e: MouseEvent) {
     //   chesses.value[x][y] = Chess.None
     // }
   }
+}
+
+const hoverX = ref(-1)
+const hoverY = ref(-1)
+
+const onPointerMove = (e: PointerEvent) => {
+  const { x, y } = calcChessPosition(e.offsetX, e.offsetY)
+  hoverX.value = x
+  hoverY.value = y
 }
 
 function drawChessboard () {
@@ -111,26 +126,44 @@ function drawChesses () {
       ctx.lineWidth = LINE_WIDTH
       chesses.value.forEach((row, rowIndex) => {
         row.forEach((column, columnIndex) => {
-          const y = heightDiff.value + rowSize.value * rowIndex + rowSize.value / 2 - LINE_WIDTH / 2
-          const x = widthDiff.value + columnSize.value * columnIndex + columnSize.value / 2 - LINE_WIDTH / 2
+          const centerX = widthDiff.value + columnSize.value * columnIndex + columnSize.value / 2 - LINE_WIDTH / 2
+          const centerY = heightDiff.value + rowSize.value * rowIndex + rowSize.value / 2 - LINE_WIDTH / 2
+          if (hoverX.value === rowIndex && hoverY.value === columnIndex) {
+            ctx.lineWidth = LINE_WIDTH * 0.5
+            ctx.beginPath()
+            ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8, Math.PI / 8 * 3, false)
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)'
+            ctx.stroke()
+            ctx.beginPath()
+            ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8 * 5, Math.PI / 8 * 7, false)
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)'
+            ctx.stroke()
+            ctx.beginPath()
+            ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8 * 9, Math.PI / 8 * 11, false)
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)'
+            ctx.stroke()
+            ctx.beginPath()
+            ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8 * 13, Math.PI / 8 * 15, false)
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)'
+            ctx.stroke()
+            ctx.lineWidth = 0
+          }
           switch (column) {
             case Chess.None:
               break
             case Chess.Black:
+              ctx.lineWidth = 0
               ctx.beginPath()
-              ctx.arc(x, y, Math.min(rowSize.value, columnSize.value) * 0.25, 0, 2 * Math.PI, false)
+              ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25, 0, 2 * Math.PI, false)
               ctx.fillStyle = '#000000'
               ctx.fill()
-              ctx.strokeStyle = '#000000'
-              ctx.stroke()
               break
             case Chess.White:
+              ctx.lineWidth = 0
               ctx.beginPath()
-              ctx.arc(x, y, Math.min(rowSize.value, columnSize.value) * 0.25, 0, 2 * Math.PI, false)
+              ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25, 0, 2 * Math.PI, false)
               ctx.fillStyle = '#FFFFFF'
               ctx.fill()
-              ctx.strokeStyle = '#FFFFFF'
-              ctx.stroke()
               break
           }
         })
@@ -144,6 +177,12 @@ onMounted(() => {
 })
 
 watch(chesses, () => {
+  drawChessboard()
+})
+watch(hoverX, () => {
+  drawChessboard()
+})
+watch(hoverY, () => {
   drawChessboard()
 })
 
