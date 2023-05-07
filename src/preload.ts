@@ -29,5 +29,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('setBgmFile', (_, path: Array<string>) => {
       listener(path)
     })
-  }
+  },
+  getLocalIpAddresses: () => ipcRenderer.invoke('net:getLocalIpAddresses'),
+  getOnlinePort: () => ipcRenderer.invoke('net:getOnlinePort'),
+  setOnlinePort: (port: number) => ipcRenderer.send('net:setOnlinePort', port),
+  getRealOnlinePort: () => ipcRenderer.invoke('net:getRealOnlinePort')
 })

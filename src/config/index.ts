@@ -3,15 +3,16 @@ import { useStore } from '@/store'
 import { ref, watch } from 'vue'
 
 type NoGoConfigBooleanKey = 'bgm'
-type NoGoConfigNumberKey = 'bgmVolume'|'bgmType'
-type NoGoConfigStringKey = 'bgmSongsId'|'bgmFilePath'
+type NoGoConfigNumberKey = 'bgmVolume' | 'bgmType'
+type NoGoConfigStringKey = 'bgmSongsId' | 'bgmFilePath' | 'onlineUsername'
 
 export interface NoGoConfig {
   bgm: boolean,
   bgmVolume: number,
   bgmType: BackgroundMusicType,
   bgmSongsId: string,
-  bgmFilePath: string
+  bgmFilePath: string,
+  onlineUsername: string
 }
 
 export interface NoGoConfigDiff {
@@ -19,7 +20,8 @@ export interface NoGoConfigDiff {
   bgmVolume?: number,
   bgmType?: BackgroundMusicType,
   bgmSongsId?: string,
-  bgmFilePath?: string
+  bgmFilePath?: string,
+  onlineUsername?: string
 }
 
 export const DEFAULT_CONFIG: NoGoConfig = {
@@ -27,7 +29,8 @@ export const DEFAULT_CONFIG: NoGoConfig = {
   bgmVolume: 1,
   bgmType: 0,
   bgmSongsId: '1975987793',
-  bgmFilePath: ''
+  bgmFilePath: '',
+  onlineUsername: 'Player'
 }
 
 const initConfig = () => {
@@ -79,5 +82,5 @@ export const useStringConfig = (key: NoGoConfigStringKey) => {
   watch(value, (newValue) => {
     updateValue(newValue)
   })
-  return [value, updateValue]
+  return { value, updateValue }
 }

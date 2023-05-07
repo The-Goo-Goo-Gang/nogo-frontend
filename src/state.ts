@@ -23,6 +23,7 @@ export interface DynamicStatistics {
 export interface GameState {
   chessboard: Array<Array<Chess>>,
   now_playing: Chess,
+  move_count: number,
   metadata: GameMetadata,
   statistics: Array<DynamicStatistics>
 }
@@ -46,4 +47,15 @@ export interface UiState {
   status: GameStatus,
   game?: GameState,
   game_result: GameResult
+}
+
+export interface RemoteConnectState {
+  is_connected: boolean,
+  is_connecting: boolean,
+  is_connecting_failed: boolean,
+  failed_message?: string,
+  remote_ip?: string,
+  remote_port?: number,
+  is_requesting: boolean,
+  requesting_chess: Chess
 }

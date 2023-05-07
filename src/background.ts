@@ -13,6 +13,8 @@ import { NetworkData } from './network/data'
 import { OpCode } from './const'
 import { changeFileName } from './utils/file'
 import { getPortPromise } from 'portfinder'
+import { getLocalIpAddresses } from './utils/net'
+import { getConfig, setConfig } from './config/config'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -23,15 +25,21 @@ const log = (...args: any[]) => {
   })
 }
 
-app.setPath('userData', path.join(app.getPath('appData'), 'NoGo'))
-app.setPath('sessionData', path.join(app.getPath('userData'), 'Session Data'))
+if (!isDevelopment) {
+  app.setPath('userData', path.join(app.getPath('appData'), 'NoGo'))
+  app.setPath('sessionData', path.join(app.getPath('userData'), 'Session Data'))
+}
+
+const getOnlinePort = () => {
+  return getConfig().port
+}
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
-async function createWindow () {
+const createWindow = async () => {
   // Create the browser window.
   const win = new BrowserWindow({
     width: 1280,
@@ -88,11 +96,11 @@ const runExec = (cmdStr: string, cmdPath: string, args: Array<string> = [], onSu
     })
   }
 }
-function startServer (port = 5000) {
+const startServer = (port = 5000, onlinePort = 6000) => {
   const cmdStr = './nogo-server'
   const cmdPath = './server'
   const promise = new Promise<boolean>(resolve => {
-    runExec(cmdStr, cmdPath, [`${port}`], null, data => {
+    runExec(cmdStr, cmdPath, [`${port}`, `${onlinePort}`], null, data => {
       if (data.includes('Serving on')) {
         resolve(true)
       }
@@ -103,7 +111,7 @@ function startServer (port = 5000) {
 
 let client: Socket | null = null
 const stick = new Stick()
-function connectToBackend (onSuccess: () => void, port = 5000, ipAddress = '127.0.0.1') {
+const connectToBackend = (onSuccess: () => void, port = 5000, ipAddress = '127.0.0.1') => {
   client = new Socket()
   client.connect(port, ipAddress, () => {
     if (client) {
@@ -130,7 +138,7 @@ function connectToBackend (onSuccess: () => void, port = 5000, ipAddress = '127.
   })
 }
 
-function disconnectFromBackend () {
+const disconnectFromBackend = () => {
   if (client) {
     client.end()
     client.destroy()
@@ -138,7 +146,7 @@ function disconnectFromBackend () {
   }
 }
 
-function stopServer () {
+const stopServer = () => {
   if (serverProcess != null) {
     serverProcess.kill('SIGINT')
   }
@@ -173,6 +181,23 @@ app.whenReady().then(async () => {
   protocol.registerFileProtocol('nogo', (request, callback) => {
     const url = request.url.substring(7)
     callback(path.join(app.getPath('userData'), decodeURI(path.normalize(url))))
+  })
+
+  const port = await getPortPromise({ port: 5000 })
+  const onlinePort = await getPortPromise({ port: getOnlinePort() })
+
+  ipcMain.handle('net:getLocalIpAddresses', () => {
+    return getLocalIpAddresses()
+  })
+  ipcMain.handle('net:getOnlinePort', () => {
+    return getOnlinePort()
+  })
+  ipcMain.handle('net:getRealOnlinePort', () => {
+    return onlinePort
+  })
+
+  ipcMain.on('net:setOnlinePort', (e, port) => {
+    setConfig({ port })
   })
 
   ipcMain.on('exit', e => {
@@ -218,9 +243,8 @@ app.whenReady().then(async () => {
       console.error('Vue Devtools failed to install:', e)
     }
   }
-  const port = await getPortPromise({ port: 5000 })
-  log('start server at port', port)
-  await startServer(port)
+  log('start server at port', port, onlinePort)
+  await startServer(port, onlinePort)
   setTimeout(() => {
     connectToBackend(() => {
       createWindow()

@@ -5,7 +5,7 @@
         <PlayerIndicator
           :player="store.state.uiState.game?.metadata.player_opposing || { name: 'Player B', type: PlayerType.LocalHumanPlayer, chess_type: Chess.White }"
           :is-playing="!isOurPlayerPlaying" />
-        <div class="timer" :style="{ opacity: (timerRunning && !isOurPlayerPlaying) ? 1 : 0 }">
+        <div class="timer" :style="{ opacity: (shouldStartTimer && timerRunning && !isOurPlayerPlaying) ? 1 : 0 }">
           <ProgressBar :progress="timerProgress" />
         </div>
       </div>
@@ -13,7 +13,7 @@
         <GameChessboard :width="400" :height="400" :chesses="chessboard" @chess-clicked="onChessClicked"></GameChessboard>
       </div>
       <div class="player-container">
-        <div class="timer" :style="{ opacity: timerRunning && isOurPlayerPlaying ? 1 : 0 }">
+        <div class="timer" :style="{ opacity: shouldStartTimer && timerRunning && isOurPlayerPlaying ? 1 : 0 }">
           <ProgressBar :progress="timerProgress" />
         </div>
         <PlayerIndicator
@@ -23,7 +23,7 @@
     </div>
     <div class="game-right-container right">
       <div class="game-actions">
-        <button class="game-action-btn fill" @click="giveUp">认输</button>
+        <button class="game-action-btn fill" @click="giveUp" :disabled="!isOurPlayerPlaying">认输</button>
       </div>
     </div>
   </div>
@@ -33,42 +33,53 @@
       <p>{{ winnerName }}获胜</p>
       <p v-if="false">原因：{{ winReasonText }}</p>
       <div class="game-actions">
-        <button class="game-action-btn" @click="restartGame">再来一局</button>
-        <button class="game-action-btn" @click="returnHome">返回首页</button>
+        <button class="game-action-btn" @click="showRestartDialog = true">再来一局</button>
+        <button class="game-action-btn" @click="exitOnlineGame">退出游戏</button>
       </div>
     </div>
   </div>
+  <ModalDialog title="你想要执黑还是执白？" v-model="showRestartDialog">
+    <template #actions>
+      <button class="game-action-btn" @click="restartOnlineGame(Chess.Black)">黑</button>
+      <button class="game-action-btn" @click="restartOnlineGame(Chess.White)">白</button>
+    </template>
+  </ModalDialog>
 </template>
 
 <script setup lang="ts">
+import ModalDialog from '@/components/dialog/ModalDialog.vue'
 import PlayerIndicator from '@/components/PlayerIndicator.vue'
 import GameChessboard from '@/components/GameChessboard.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
 import { useStore } from '@/store'
-import { Chess, GameStatus, LocalGameType, OpCode, PlayerType, WinType } from '@/const'
-import { computed, watch, onMounted } from 'vue'
+import { Chess, GameStatus, OpCode, PlayerType, WinType } from '@/const'
+import { computed, watch, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+
+const showRestartDialog = ref(false)
 
 const store = useStore()
 const router = useRouter()
 
-const restartGame = () => {
-  store.dispatch('startLocalGame', { type: LocalGameType.PVP, size: 9 })
+const restartOnlineGame = (chessType: Chess) => {
+  showRestartDialog.value = false
+  store.dispatch('restartOnlineGame', { chessType })
 }
 
 const onChessClicked = (x: number, y: number) => {
-  if (store.state.uiState.status === GameStatus.ON_GOING) {
+  if (store.state.uiState.status === GameStatus.ON_GOING && isOurPlayerPlaying.value) {
     console.log('onChessClicked', x, y, (store.state.uiState.game?.chessboard[x] || [])[y] || Chess.None)
-    store.dispatch('doLocalMove', { x, y })
+    store.dispatch('doMove', { x, y })
   }
 }
 
-const returnHome = () => {
-  router.push('/')
+const exitOnlineGame = () => {
+  store.dispatch('leaveOnlineGame')
+  router.replace('/')
 }
 
 const giveUp = () => {
-  if (store.state.uiState.game != null && store.state.uiState.status === GameStatus.ON_GOING) {
+  if (store.state.uiState.game != null && store.state.uiState.status === GameStatus.ON_GOING && isOurPlayerPlaying.value) {
     const chess = store.state.uiState.game.now_playing === store.state.uiState.game.metadata.player_our.chess_type ? store.state.uiState.game.metadata.player_our.chess_type : store.state.uiState.game.metadata.player_opposing.chess_type
     const role = chess === Chess.Black ? 'b' : 'w'
     window.electronAPI.sendData(OpCode.GIVEUP_OP, role)
@@ -122,7 +133,7 @@ const winReasonText = computed(() => {
 })
 
 watch(nowPlayer, () => {
-  if (store.state.uiState.status === GameStatus.ON_GOING && shouldStartTimer.value) {
+  if (shouldStartTimer.value) {
     store.dispatch('startTimer', { duration: timeout.value })
   }
 })

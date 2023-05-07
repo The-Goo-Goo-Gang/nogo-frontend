@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, withDefaults, onMounted, ref, computed, watch, defineEmits } from 'vue'
+import { withDefaults, onMounted, ref, computed, watch } from 'vue'
 import { Chess } from '@/const'
 
 const LINE_WIDTH = 4
@@ -45,7 +45,7 @@ const columnSize = computed(() => LINE_WIDTH + columnSpace.value)
 
 const chesses = computed(() => props.chesses)
 
-function clearCanvas () {
+function clearCanvas() {
   if (canvas.value != null) {
     const ctx = canvas.value.getContext('2d')
     if (ctx != null) {
@@ -68,7 +68,7 @@ const calcChessPosition = (x: number, y: number): { x: number, y: number } => {
   }
 }
 
-function canvasClicked (e: MouseEvent) {
+function canvasClicked(e: MouseEvent) {
   if (canvas.value != null) {
     const { x, y } = calcChessPosition(e.offsetX, e.offsetY)
     // console.log(x, y, chesses.value[x][y])
@@ -92,7 +92,7 @@ const onPointerMove = (e: PointerEvent) => {
   hoverY.value = y
 }
 
-function drawChessboard () {
+function drawChessboard() {
   clearCanvas()
   if (canvas.value != null) {
     const ctx = canvas.value.getContext('2d')
@@ -118,7 +118,7 @@ function drawChessboard () {
   drawChesses()
 }
 
-function drawChesses () {
+function drawChesses() {
   if (canvas.value != null) {
     console.log('drawChesses', chesses.value)
     const ctx = canvas.value.getContext('2d')

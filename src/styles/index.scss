@@ -73,7 +73,7 @@
   cursor: pointer;
   user-select: none;
 
-  input {
+  input:not([type='text']) {
     margin-right: 0.5rem;
   }
 

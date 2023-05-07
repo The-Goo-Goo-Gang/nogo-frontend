@@ -81,7 +81,7 @@ const { back } = useQuickRouter()
 const [playBgm] = useBooleanConfig('bgm')
 const { value: bgmVolume } = useNumberConfig('bgmVolume')
 const { value: bgmType } = useNumberConfig('bgmType')
-const [bgmSongsId] = useStringConfig('bgmSongsId')
+const { value: bgmSongsId } = useStringConfig('bgmSongsId')
 
 watch(file, (newVal) => {
   console.log(newVal)

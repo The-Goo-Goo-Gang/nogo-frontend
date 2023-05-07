@@ -29,6 +29,7 @@
       <ChevronRightIcon class="bgm-player-indicator-icon" />
     </div>
   </div>
+  <div id="alert-container"></div>
 </template>
 
 <script setup lang="ts">
@@ -40,7 +41,10 @@ import { computed, onMounted, Ref, ref, watch } from 'vue'
 import { BackgroundMusicType, OpCode } from './const'
 import { useStore } from './store'
 import { SongData } from './components/player/data'
+import { Alert } from './components/alert/alert'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const store = useStore()
 
 const playBgm = ref(false)
@@ -96,8 +100,41 @@ const stopPlayBgm = () => {
 
 onMounted(() => {
   window.electronAPI.onData((opCode, data1, data2) => {
-    if (opCode === OpCode.UPDATE_UI_STATE_OP && data1 && data2) {
-      store.commit('updateState', JSON.parse(data2))
+    switch (opCode) {
+      case OpCode.UPDATE_UI_STATE_OP:
+        if (data1 && data2) store.commit('updateState', JSON.parse(data2))
+        break
+      case OpCode.CONNECT_RESULT_OP:
+        if (data1 && data2) {
+          const success = data1 === 'success'
+          if (success) {
+            const address = data2
+            const host = address.split(':')[0]
+            const port = address.split(':')[1]
+            store.commit('connectToRemoteResult', {
+              success,
+              host,
+              port
+            })
+          } else {
+            store.commit('connectToRemoteResult', {
+              success,
+              message: data2
+            })
+          }
+        }
+        break
+      case OpCode.READY_OP:
+        store.dispatch('receiveReady', { data1, data2 })
+        break
+      case OpCode.REJECT_OP:
+        store.dispatch('receiveReject', { data1, data2 })
+        break
+      case OpCode.LEAVE_OP:
+        Alert({ title: '对方已离开', content: '对方已离开游戏', timeout: 3000 })
+        router.push('/')
+        store.dispatch('receiveLeave')
+        break
     }
   })
   window.electronAPI.onSetBgmFile(path => {
@@ -148,7 +185,7 @@ const minimize = () => {
   left: 0;
   top: 0;
   right: 0;
-  z-index: 9;
+  z-index: 9999;
   width: 100%;
 
   .app-title-bar-content {
@@ -304,5 +341,15 @@ const minimize = () => {
   &:hover .bgm-player-indicator-icon {
     transform: rotate(180deg);
   }
+}
+
+#alert-container {
+  position: fixed;
+  padding-top: 48px;
+  top: 0;
+  right: 0;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
 }
 </style>

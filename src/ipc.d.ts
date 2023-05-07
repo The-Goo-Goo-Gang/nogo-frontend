@@ -8,6 +8,10 @@ declare interface ElectronAPI {
   onLog: (...args: any[]) => void,
   setBgmFile: (path: Array<string>) => void,
   onSetBgmFile: (listener: (path: Array<string>) => void) => void,
+  getLocalIpAddresses: () => Promise<Array<string>>,
+  getOnlinePort: () => Promise<number>,
+  setOnlinePort: (port: number) => void,
+  getRealOnlinePort: () => Promise<number>,
 }
 
 declare global {
