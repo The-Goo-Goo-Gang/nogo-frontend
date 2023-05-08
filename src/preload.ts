@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('data', dataListener)
     return listenerId
   },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   send: (channel: string, ...args: any[]) => {
     ipcRenderer.send(channel, ...args)
   },
@@ -43,7 +44,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   restart: () => {
     ipcRenderer.send('restart')
   },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onLog: (listener: (...args: any[]) => void) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ipcRenderer.on('log', (_, ...args: any[]) => {
       listener(...args)
     })

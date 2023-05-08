@@ -23,7 +23,7 @@
         </template>
       </template>
       <template v-else>
-        <ChatView class="chat-view" :target="currentChatTarget" />
+        <ChatView class="chat-view" :target="currentChatTarget" ref="chatView" />
       </template>
     </div>
   </div>
@@ -33,12 +33,13 @@
 import TitleBar from '@/components/TitleBar.vue'
 import ChatView from '@/components/ChatView.vue'
 import CloseIcon from 'vue-material-design-icons/Close.vue'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useStore } from '@/store'
 import { OpCode } from '@/const'
 
 const store = useStore()
 const emit = defineEmits(['close'])
+const chatView = ref<InstanceType<typeof ChatView> | null>(null)
 
 const listenerId = ref(-1)
 const currentChatTarget = ref('')
@@ -50,8 +51,13 @@ const chatBack = () => {
   }
 }
 
-const openChat = (target: string) => {
+const openChat = (target: string, scrollToBottom = true) => {
   currentChatTarget.value = target
+  if (scrollToBottom) {
+    nextTick(() => {
+      chatView.value?.scrollToBottom()
+    })
+  }
 }
 
 onMounted(() => {
@@ -65,7 +71,7 @@ onUnmounted(() => {
   if (listenerId.value !== -1) window.electronAPI.removeOnDataListener(listenerId.value)
 })
 
-defineExpose({ openChat })
+defineExpose({ openChat, currentChatTarget })
 </script>
 
 <style lang="scss">
@@ -148,5 +154,12 @@ defineExpose({ openChat })
       color: #666;
     }
   }
+}
+</style>
+
+<style lang="scss" scoped>
+.chat-view {
+  height: calc(100% - 48px);
+  background: none;
 }
 </style>

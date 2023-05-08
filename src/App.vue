@@ -170,6 +170,9 @@ onMounted(() => {
               }
             })
           }
+          if (route.name === 'gameOnline') {
+            router.replace('/')
+          }
         }
         break
       case OpCode.REJECT_OP:
@@ -205,7 +208,7 @@ onMounted(() => {
         break
       case OpCode.CHAT_RECEIVE_MESSAGE_OP:
         if (!data1 || !data2) break
-        if (route.name !== 'startOnlineGame') {
+        if (chat.value?.currentChatTarget !== data2) {
           Alert({
             title: `${data2} 给你发来了一条消息`,
             content: data1,
@@ -463,10 +466,5 @@ watch(() => hasAcceptedRequest.value && isGaming.value, isGaming => {
   height: calc(100% - 64px - 16px - 10px);
   background-color: rgba($color: #FFF, $alpha: 0.35);
   backdrop-filter: blur(16px);
-}
-
-.chat-view {
-  height: calc(100% - 48px);
-  background: none;
 }
 </style>

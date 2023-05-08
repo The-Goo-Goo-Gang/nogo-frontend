@@ -47,6 +47,7 @@
     <template #actions>
       <button class="game-action-btn" @click="restartOnlineGame(Chess.Black)">黑</button>
       <button class="game-action-btn" @click="restartOnlineGame(Chess.White)">白</button>
+      <button class="game-action-btn" @click="showRestartDialog = !showRestartDialog">取消</button>
     </template>
   </ModalDialog>
 </template>
@@ -70,6 +71,7 @@ const router = useRouter()
 const restartOnlineGame = (chessType: Chess) => {
   showRestartDialog.value = false
   store.dispatch('requestRemoteGame', { chessType })
+  router.replace('/start/online')
 }
 
 const onChessClicked = (x: number, y: number) => {
