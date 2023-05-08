@@ -30,6 +30,7 @@ export interface GameState {
   now_playing: Chess,
   move_count: number,
   disabled_positions: Array<Position>,
+  last_move?: Position,
   metadata: GameMetadata,
   statistics: Array<DynamicStatistics>
 }

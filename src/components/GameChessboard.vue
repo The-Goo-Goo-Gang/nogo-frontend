@@ -21,7 +21,8 @@ const props = withDefaults(defineProps<{
   height: number,
   chesses: Chess[][],
   size: number,
-  disabledPosition?: Position[]
+  disabledPositions?: Position[],
+  highlightPositions?: Position[]
 }>(), {
   size: 9
 })
@@ -43,7 +44,8 @@ const rowSize = computed(() => LINE_WIDTH + rowSpace.value)
 const columnSize = computed(() => LINE_WIDTH + columnSpace.value)
 
 const chesses = computed(() => props.chesses)
-const disabledPosition = computed(() => props.disabledPosition || [])
+const disabledPositions = computed(() => props.disabledPositions || [])
+const highlightPositions = computed(() => props.highlightPositions || [])
 
 function clearCanvas() {
   if (canvas.value != null) {
@@ -97,7 +99,11 @@ const onPointerMove = (e: PointerEvent) => {
 }
 
 const isPositionDisabled = (x: number, y: number) => {
-  return disabledPosition.value.some(p => p.x === x && p.y === y)
+  return disabledPositions.value.some(p => p.x === x && p.y === y)
+}
+
+const isHighlightPosition = (x: number, y: number) => {
+  return highlightPositions.value.some(p => p.x === x && p.y === y)
 }
 
 const isHoverPositionDisabled = computed(() => {
@@ -144,6 +150,26 @@ function drawChessboard() {
   drawChesses()
 }
 
+const drawCursor = (ctx: CanvasRenderingContext2D, x: number, y: number, color = 'rgba(0, 0, 0, 0.5)') => {
+  const centerX = widthDiff.value + columnSize.value * y + columnSize.value / 2 - LINE_WIDTH / 2
+  const centerY = heightDiff.value + rowSize.value * x + rowSize.value / 2 - LINE_WIDTH / 2
+  ctx.lineWidth = LINE_WIDTH * 0.5
+  ctx.strokeStyle = color
+  ctx.beginPath()
+  ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8, Math.PI / 8 * 3, false)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8 * 5, Math.PI / 8 * 7, false)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8 * 9, Math.PI / 8 * 11, false)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8 * 13, Math.PI / 8 * 15, false)
+  ctx.stroke()
+  ctx.lineWidth = 0
+}
+
 function drawChesses() {
   if (canvas.value != null) {
     console.log('drawChesses', chesses.value)
@@ -155,25 +181,13 @@ function drawChesses() {
           const centerX = widthDiff.value + columnSize.value * columnIndex + columnSize.value / 2 - LINE_WIDTH / 2
           const centerY = heightDiff.value + rowSize.value * rowIndex + rowSize.value / 2 - LINE_WIDTH / 2
           if (hoverChessX.value === rowIndex && hoverChessY.value === columnIndex) {
-            ctx.lineWidth = LINE_WIDTH * 0.5
             if (isPositionDisabled(rowIndex, columnIndex)) {
-              ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)'
+              drawCursor(ctx, rowIndex, columnIndex, 'rgba(255, 0, 0, 0.5)')
             } else {
-              ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)'
+              drawCursor(ctx, rowIndex, columnIndex)
             }
-            ctx.beginPath()
-            ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8, Math.PI / 8 * 3, false)
-            ctx.stroke()
-            ctx.beginPath()
-            ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8 * 5, Math.PI / 8 * 7, false)
-            ctx.stroke()
-            ctx.beginPath()
-            ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8 * 9, Math.PI / 8 * 11, false)
-            ctx.stroke()
-            ctx.beginPath()
-            ctx.arc(centerX, centerY, Math.min(rowSize.value, columnSize.value) * 0.25 + LINE_WIDTH * 1, Math.PI / 8 * 13, Math.PI / 8 * 15, false)
-            ctx.stroke()
-            ctx.lineWidth = 0
+          } else if (isHighlightPosition(rowIndex, columnIndex)) {
+            drawCursor(ctx, rowIndex, columnIndex, 'rgba(0, 0, 255, 0.5)')
           }
           switch (column) {
             case Chess.None:
@@ -206,7 +220,7 @@ onMounted(() => {
 watch(chesses, () => {
   drawChessboard()
 })
-watch(disabledPosition, () => {
+watch(disabledPositions, () => {
   drawChessboard()
 })
 watch(hoverChessX, () => {
