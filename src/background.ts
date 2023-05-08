@@ -39,6 +39,11 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
+const restartApp = () => {
+  app.relaunch()
+  app.quit()
+}
+
 const createWindow = async () => {
   // Create the browser window.
   const win = new BrowserWindow({
@@ -210,6 +215,7 @@ app.whenReady().then(async () => {
     const window = BrowserWindow.fromWebContents(webContents)
     if (window) window.minimize()
   })
+  ipcMain.on('restart', () => restartApp())
   ipcMain.on('setBgmFile', (e, filePaths: Array<string>) => {
     const backgroundMusicFolder = path.join(app.getPath('userData'), 'background-music')
     if (!fs.existsSync(backgroundMusicFolder)) {

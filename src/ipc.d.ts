@@ -8,6 +8,7 @@ declare interface ElectronAPI {
   sendDataAsync: (opCode: OpCode, data1?: string | undefined, data2?: string | undefined) => Promise<void>,
   send: (channel: string, ...args: any[]) => void,
   exit: () => void,
+  restart: () => void,
   onLog: (...args: any[]) => void,
   setBgmFile: (path: Array<string>) => void,
   onSetBgmFile: (listener: (path: Array<string>) => void) => void,

@@ -40,6 +40,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exit: () => {
     ipcRenderer.send('exit')
   },
+  restart: () => {
+    ipcRenderer.send('restart')
+  },
   onLog: (listener: (...args: any[]) => void) => {
     ipcRenderer.on('log', (_, ...args: any[]) => {
       listener(...args)
