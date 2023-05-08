@@ -5,7 +5,7 @@
         <PlayerIndicator
           :player="store.state.uiState.game?.metadata.player_opposing || { name: 'Player B', type: PlayerType.LocalHumanPlayer, chess_type: Chess.White }"
           :is-playing="!isOurPlayerPlaying" />
-        <div class="timer" :style="{ opacity: (timerRunning && !isOurPlayerPlaying) ? 1 : 0 }">
+        <div class="timer" :style="{ opacity: (shouldStartTimer && timerRunning && !isOurPlayerPlaying) ? 1 : 0 }">
           <ProgressBar :progress="timerProgress" />
         </div>
       </div>
@@ -13,7 +13,7 @@
         <GameChessboard :width="400" :height="400" :chesses="chessboard" @chess-clicked="onChessClicked"></GameChessboard>
       </div>
       <div class="player-container">
-        <div class="timer" :style="{ opacity: timerRunning && isOurPlayerPlaying ? 1 : 0 }">
+        <div class="timer" :style="{ opacity: shouldStartTimer && timerRunning && isOurPlayerPlaying ? 1 : 0 }">
           <ProgressBar :progress="timerProgress" />
         </div>
         <PlayerIndicator
@@ -53,7 +53,11 @@ const store = useStore()
 const router = useRouter()
 
 const restartGame = () => {
-  store.dispatch('startLocalGame', { type: LocalGameType.PVP, size: 9 })
+  store.dispatch('startLocalGame', {
+    type: LocalGameType.PVP,
+    size: store.state.uiState.game?.metadata.size || 9,
+    timeout: store.state.uiState.game?.metadata.timeout || 30
+  })
 }
 
 const onChessClicked = (x: number, y: number) => {
