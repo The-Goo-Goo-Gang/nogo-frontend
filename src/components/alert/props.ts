@@ -28,6 +28,7 @@ export const componentProps = {
   // 模态框内容
   content: String,
   positiveButtonText: String,
+  neutralButtonText: String,
   negativeButtonText: String,
   timeout: Number
 }
@@ -36,6 +37,7 @@ export interface ComponentProps {
   title: string,
   content?: string,
   positiveButtonText?: string,
+  neutralButtonText?: string,
   negativeButtonText?: string,
   timeout?: number
 }

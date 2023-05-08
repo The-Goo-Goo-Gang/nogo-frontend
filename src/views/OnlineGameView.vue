@@ -25,6 +25,10 @@
       <div class="game-actions">
         <button class="game-action-btn fill" @click="giveUp" :disabled="!isOurPlayerPlaying">认输</button>
       </div>
+      <div class="game-chat-container">
+        <ChatView class="game-chat" v-if="store.state.uiState.game"
+          :target="store.state.uiState.game.metadata.player_opposing.name" />
+      </div>
     </div>
   </div>
   <div class="game-result" :class="showGameResult ? ['show'] : ['hide']">
@@ -51,6 +55,7 @@ import ModalDialog from '@/components/dialog/ModalDialog.vue'
 import PlayerIndicator from '@/components/PlayerIndicator.vue'
 import GameChessboard from '@/components/GameChessboard.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
+import ChatView from '@/components/ChatView.vue'
 import { useStore } from '@/store'
 import { Chess, GameStatus, OpCode, PlayerType, WinType } from '@/const'
 import { computed, watch, onMounted, ref } from 'vue'
@@ -63,7 +68,7 @@ const router = useRouter()
 
 const restartOnlineGame = (chessType: Chess) => {
   showRestartDialog.value = false
-  store.dispatch('restartOnlineGame', { chessType })
+  store.dispatch('requestRemoteGame', { chessType })
 }
 
 const onChessClicked = (x: number, y: number) => {
@@ -100,14 +105,12 @@ const isOurPlayerPlaying = computed(() => store.state.uiState.game?.now_playing 
 
 const showGameResult = computed(() => store.state.uiState.status === GameStatus.GAME_OVER && store.state.uiState.game_result.winner !== Chess.None)
 const winnerName = computed(() => {
+  if (store.state.uiState.game == null) return ''
   const winner = store.state.uiState.game_result.winner
-  if (winner === Chess.Black) {
-    return '黑方'
-  } else if (winner === Chess.White) {
-    return '白方'
-  } else {
-    return ''
-  }
+  if (winner === Chess.None) return ''
+  const winnerChessText = winner === Chess.Black ? '黑方' : '白方'
+  const winnerPlayer = winner === store.state.uiState.game.metadata.player_our.chess_type ? store.state.uiState.game.metadata.player_our : store.state.uiState.game.metadata.player_opposing
+  return `${winnerChessText}（${winnerPlayer.name}）`
 })
 const loserName = computed(() => {
   const loser = -store.state.uiState.game_result.winner
@@ -132,6 +135,17 @@ const winReasonText = computed(() => {
   }
 })
 
+const chatMessages = computed(() => {
+  if (!store.state.uiState.game) return []
+  return store.state.chat_messages.get(store.state.uiState.game.metadata.player_opposing.name) || []
+})
+const chatInput = ref('')
+const sendChatMessage = () => {
+  if (!store.state.uiState.game) return
+  store.dispatch('sendChatMessage', { target: store.state.uiState.game.metadata.player_opposing.name, message: chatInput.value })
+  chatInput.value = ''
+}
+
 watch(nowPlayer, () => {
   if (shouldStartTimer.value) {
     store.dispatch('startTimer', { duration: timeout.value })
@@ -143,7 +157,7 @@ onMounted(() => {
 })
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 .timer {
   transition: opacity ease-in-out .3s;
   padding: 0px 16px;
@@ -215,6 +229,8 @@ onMounted(() => {
   display: inline-flex;
   flex-direction: column;
   justify-content: flex-end;
+  gap: 16px;
+  align-content: center;
   // flex: 1;
 }
 

@@ -135,6 +135,13 @@ onMounted(() => {
         router.push('/')
         store.dispatch('receiveLeave')
         break
+      case OpCode.CHAT_RECEIVE_MESSAGE_OP:
+        Alert({ title: `收到来自${data2}的消息`, content: data1, timeout: 3000 })
+        store.commit('receiveChatMessage', { message: data1, username: data2 })
+        break
+      case OpCode.CHAT_USERNAME_UPDATE_OP:
+        store.commit('updateChatUsername', { oldUsername: data1, newUSername: data2 })
+        break
     }
   })
   window.electronAPI.onSetBgmFile(path => {

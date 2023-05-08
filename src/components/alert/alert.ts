@@ -4,7 +4,7 @@ import { ComponentProps } from './props'
 import { renderInstance } from './utils'
 
 /** 组件 Props 类型, ExtractPropTypes 可将 Constructor 转换为对应值类型 */
-type Props = ComponentProps & { onConfirm?: () => void, onClose?: () => void }
+type Props = ComponentProps & { onConfirm?: () => void, onClose?: () => void, onNeutralClicked?: () => void }
 
 /** 组件调用 resolve 返回结果 */
 type Result = { path: string }[]

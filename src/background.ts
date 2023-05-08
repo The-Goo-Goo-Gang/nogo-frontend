@@ -234,6 +234,13 @@ app.whenReady().then(async () => {
       client.write(data)
     }
   })
+  ipcMain.handle('net:sendData', (e, opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
+    const data = JSON.stringify(new NetworkData(opCode, data1, data2)) + '\n'
+    if (client) {
+      log('sendData', data)
+      client.write(data)
+    }
+  })
 
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools

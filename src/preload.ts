@@ -2,17 +2,40 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { OpCode } from './const'
 import { NetworkData } from './network/data'
 
+const dataListeners: Array<(event: Electron.IpcRendererEvent, data: NetworkData) => void> = []
+
 contextBridge.exposeInMainWorld('electronAPI', {
   onData: (listener: (opCode: number, data1: string | undefined, data2: string | undefined) => void) => {
-    ipcRenderer.on('data', (_, data: NetworkData) => {
+    const dataListener = (_: Electron.IpcRendererEvent, data: NetworkData) => {
       listener(data.op, data.data1, data.data2)
-    })
+    }
+    const listenerId = dataListeners.length
+    dataListeners.push(dataListener)
+    ipcRenderer.on('data', dataListener)
+    return listenerId
+  },
+  removeOnDataListener: (listenerId: number) => {
+    ipcRenderer.removeListener('data', dataListeners[listenerId])
+  },
+  onReceiveOp: (opCode: number, listener: (data1: string | undefined, data2: string | undefined) => void) => {
+    const dataListener = (_: Electron.IpcRendererEvent, data: NetworkData) => {
+      if (data.op === opCode) {
+        listener(data.data1, data.data2)
+      }
+    }
+    const listenerId = dataListeners.length
+    dataListeners.push(dataListener)
+    ipcRenderer.on('data', dataListener)
+    return listenerId
   },
   send: (channel: string, ...args: any[]) => {
     ipcRenderer.send(channel, ...args)
   },
   sendData: (opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
     ipcRenderer.send('sendData', opCode, data1 || '', data2 || '')
+  },
+  sendDataAsync: (opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
+    ipcRenderer.invoke('net:sendData', opCode, data1 || '', data2 || '')
   },
   exit: () => {
     ipcRenderer.send('exit')

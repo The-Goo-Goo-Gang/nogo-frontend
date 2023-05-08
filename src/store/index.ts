@@ -2,12 +2,9 @@ import { createStore, Store, useStore as baseUseStore } from 'vuex'
 import { GlobalState } from './type'
 import { InjectionKey, reactive } from 'vue'
 import { Chess, GameStatus, LocalGameType, OpCode, PlayerType, WinType } from '@/const'
-import { UiState } from '@/state'
+import { ChatMessage, UiState } from '@/state'
 import { DEFAULT_CONFIG, getConfigFromLocalStorage, NoGoConfig, NoGoConfigDiff } from '@/config'
 import { Alert } from '@/components/alert/alert'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
 
 export const key: InjectionKey<Store<GlobalState>> = Symbol('globalState')
 
@@ -56,7 +53,8 @@ export const store = createStore<GlobalState>({
       is_connecting_failed: false,
       is_requesting: false,
       requesting_chess: Chess.None
-    }
+    },
+    chat_messages: new Map()
   },
   getters: {
     isGaming(state) {
@@ -141,7 +139,7 @@ export const store = createStore<GlobalState>({
         state.remote.failed_message = payload.message
       }
     },
-    requestRemoteGame(state, payload: { username: string, chessType: Chess }) {
+    requestRemoteGame(state, payload: { chessType: Chess }) {
       state.remote.is_requesting = true
       state.remote.requesting_chess = payload.chessType
     },
@@ -160,12 +158,30 @@ export const store = createStore<GlobalState>({
       state.remote.is_connecting = false
       state.remote.is_connecting_failed = false
       state.remote.is_requesting = false
+    },
+    receiveChatMessage(state, payload: { username: string, message: string }) {
+      if (!state.chat_messages.has(payload.username)) {
+        state.chat_messages.set(payload.username, new Array<ChatMessage>())
+      }
+      state.chat_messages.get(payload.username)?.push({ sender: payload.username, content: payload.message, timestamp: new Date().getTime() })
+    },
+    sendChatMessage(state, payload: { target: string, message: string }) {
+      if (!state.chat_messages.has(payload.target)) {
+        state.chat_messages.set(payload.target, new Array<ChatMessage>())
+      }
+      state.chat_messages.get(payload.target)?.push({ sender: state.config.onlineUsername, content: payload.message, timestamp: new Date().getTime() })
+    },
+    updateChatUsername(state, payload: { oldUsername: string, newUsername: string }) {
+      if (state.chat_messages.has(payload.oldUsername)) {
+        state.chat_messages.set(payload.newUsername, state.chat_messages.get(payload.oldUsername) || [])
+        state.chat_messages.delete(payload.oldUsername)
+      }
     }
   },
   actions: {
-    startLocalGame({ commit }, payload: { type: LocalGameType, size: 9 | 11 | 13, timeout: number }) {
+    async startLocalGame({ commit }, payload: { type: LocalGameType, size: 9 | 11 | 13, timeout: number }) {
       commit('startLocalGame')
-      window.electronAPI.sendData(OpCode.START_LOCAL_GAME_OP, `${payload.timeout}`, `${payload.size}`)
+      await window.electronAPI.sendDataAsync(OpCode.START_LOCAL_GAME_OP, `${payload.timeout}`, `${payload.size}`)
     },
     startTimer({ commit, state }, payload: { duration: number }) {
       if (state.timer.running) {
@@ -190,32 +206,25 @@ export const store = createStore<GlobalState>({
         timeout
       })
     },
-    doMove({ commit, state }, payload: { x: number, y: number }) {
+    async doMove({ commit, state }, payload: { x: number, y: number }) {
       if (state.uiState.game) {
         const nowChess = (state.uiState.game.chessboard[payload.x] || [])[payload.y] || Chess.None
         if (nowChess === Chess.None) {
           const chess = state.uiState.game.now_playing === state.uiState.game.metadata.player_our.chess_type ? state.uiState.game.metadata.player_our.chess_type : state.uiState.game.metadata.player_opposing.chess_type
           commit('doMove', { x: payload.x, y: payload.y, chess })
-          window.electronAPI.sendData(OpCode.MOVE_OP, `${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[payload.x]}${payload.y + 1}`, `${new Date().getTime()}`)
+          await window.electronAPI.sendDataAsync(OpCode.MOVE_OP, `${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[payload.x]}${payload.y + 1}`, `${new Date().getTime()}`)
         }
       }
     },
-    doLocalMove({ commit, state }, payload: { x: number, y: number }) {
+    async doLocalMove({ commit, state }, payload: { x: number, y: number }) {
       if (state.uiState.game) {
         const nowChess = (state.uiState.game.chessboard[payload.x] || [])[payload.y] || Chess.None
         if (nowChess === Chess.None) {
           const chess = state.uiState.game.now_playing === state.uiState.game.metadata.player_our.chess_type ? state.uiState.game.metadata.player_our.chess_type : state.uiState.game.metadata.player_opposing.chess_type
           commit('doMove', { x: payload.x, y: payload.y, chess })
           const role = chess === Chess.Black ? 'b' : 'w'
-          window.electronAPI.sendData(OpCode.LOCAL_GAME_MOVE_OP, `${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[payload.x]}${payload.y + 1}`, role)
+          await window.electronAPI.sendDataAsync(OpCode.LOCAL_GAME_MOVE_OP, `${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[payload.x]}${payload.y + 1}`, role)
         }
-      }
-    },
-    timeout({ state }) {
-      if (state.uiState.game) {
-        const nowPlayer = state.uiState.game.now_playing === state.uiState.game.metadata.player_our.chess_type ? state.uiState.game.metadata.player_our : state.uiState.game.metadata.player_opposing
-        const nowPlayerChess = nowPlayer.chess_type === Chess.Black ? 'b' : 'w'
-        window.electronAPI.sendData(OpCode.LOCAL_GAME_TIMEOUT_OP, nowPlayerChess)
       }
     },
     updateConfig({ commit, state }, payload: NoGoConfigDiff) {
@@ -229,15 +238,15 @@ export const store = createStore<GlobalState>({
       console.log('update config', newConfig)
       window.localStorage.setItem('config', JSON.stringify(newConfig))
     },
-    connectToRemote({ commit }, payload: { host: string, port: number }) {
+    async connectToRemote({ commit }, payload: { host: string, port: number }) {
       commit('connectToRemote', payload)
-      window.electronAPI.sendData(OpCode.CONNECT_TO_REMOTE_OP, payload.host, `${payload.port}`)
+      await window.electronAPI.sendDataAsync(OpCode.CONNECT_TO_REMOTE_OP, payload.host, `${payload.port}`)
     },
-    requestRemoteGame({ commit, state }, payload: { username: string, chessType: Chess }) {
+    async requestRemoteGame({ commit, state }, payload: { chessType: Chess }) {
       if (state.remote.is_connected) {
-        commit('requestRemoteGame', payload)
         const chess = payload.chessType === Chess.Black ? 'b' : 'w'
-        window.electronAPI.sendData(OpCode.READY_OP, payload.username, chess)
+        await window.electronAPI.sendDataAsync(OpCode.READY_OP, state.config.onlineUsername, chess)
+        commit('requestRemoteGame', payload)
       }
     },
     receiveReady({ commit, state }, payload: { data1: string, data2: string | undefined }) {
@@ -252,8 +261,10 @@ export const store = createStore<GlobalState>({
           negativeButtonText: '拒绝',
           onConfirm: () => {
             const myChess = data2 === 'b' ? 'w' : 'b'
-            window.electronAPI.sendData(OpCode.READY_OP, state.config.onlineUsername, myChess)
-            commit('acceptRequest')
+            window.electronAPI.sendDataAsync(OpCode.READY_OP, state.config.onlineUsername, myChess)
+              .then(() => {
+                commit('acceptRequest')
+              })
           },
           onClose: () => {
             window.electronAPI.sendData(OpCode.REJECT_OP)
@@ -278,21 +289,18 @@ export const store = createStore<GlobalState>({
         })
       }
     },
-    leaveOnlineGame({ commit, state }) {
+    async leaveOnlineGame({ commit, state }) {
       if (state.remote.is_connected) {
-        window.electronAPI.sendData(OpCode.LEAVE_OP)
+        await window.electronAPI.sendDataAsync(OpCode.LEAVE_OP)
       }
       commit('leaveOnlineGame')
     },
     receiveLeave({ commit }) {
       commit('leaveOnlineGame')
     },
-    restartOnlineGame({ commit, state }, payload: { chessType: Chess }) {
-      if (state.remote.is_connected) {
-        const chess = payload.chessType === Chess.Black ? 'b' : 'w'
-        window.electronAPI.sendData(OpCode.READY_OP, state.uiState.game?.metadata.player_our.name, chess)
-        commit('requestRemoteGame')
-      }
+    async sendChatMessage({ commit }, payload: { target: string, message: string }) {
+      await window.electronAPI.sendDataAsync(OpCode.CHAT_SEND_MESSAGE_OP, payload.message, payload.target)
+      commit('sendChatMessage', payload)
     }
   },
   modules: {

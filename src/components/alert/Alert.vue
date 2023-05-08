@@ -12,6 +12,7 @@
         </div>
         <div class="alert-actions" v-if="showActions">
           <button class="game-action-btn fill" @click="onConfirm">{{ positiveButtonText }}</button>
+          <button class="game-action-btn" @click="close" v-if="!!neutralButtonText">{{ neutralButtonText }}</button>
           <button class="game-action-btn" @click="close">{{ negativeButtonText }}</button>
         </div>
       </div>
@@ -24,7 +25,7 @@ import { isRef, computed, nextTick } from 'vue'
 import { props } from './props'
 
 const mProps = defineProps(props)
-const emit = defineEmits(['update:modelValue', 'close', 'confirm'])
+const emit = defineEmits(['update:modelValue', 'close', 'confirm', 'neutralClicked'])
 
 const modelValue = computed({
   get: () => mProps.modelValue,
@@ -39,6 +40,11 @@ if (show.value) {
   nextTick(() => {
     show.value = true
   })
+}
+
+const onNeutralClicked = () => {
+  emit('neutralClicked')
+  show.value = false
 }
 
 const close = () => {
@@ -88,6 +94,7 @@ defineExpose({
   padding: 16px;
   background-color: rgba(255, 255, 255, 0.7);
   border-radius: 8px;
+  backdrop-filter: blur(16px);
 
   .alert-title {
     padding: 10px 0;

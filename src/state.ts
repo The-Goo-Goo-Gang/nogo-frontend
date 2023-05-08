@@ -59,3 +59,9 @@ export interface RemoteConnectState {
   is_requesting: boolean,
   requesting_chess: Chess
 }
+
+export interface ChatMessage {
+  sender: string,
+  content: string,
+  timestamp: number
+}

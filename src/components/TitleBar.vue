@@ -1,7 +1,9 @@
 <template>
   <div class="title-bar">
     <div v-if="showBack" class="title-bar-back-btn" @click="back">
-      <BackIcon class="icon-2x" />
+      <slot name="back-icon">
+        <BackIcon class="icon-2x" />
+      </slot>
     </div>
     <h3 class="title-bar-title">{{ title }}</h3>
   </div>
@@ -25,7 +27,6 @@ const back = () => {
 </script>
 
 <style lang="scss">
-
 .title-bar {
   display: flex;
   flex-direction: row;
