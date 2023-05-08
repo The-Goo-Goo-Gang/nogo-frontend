@@ -1,10 +1,15 @@
-import { Chess, GameStatus, PlayerType, WinType } from './const'
+import { Chess, GameStatus, PlayerType, RemoteGameRequestResult, WinType } from './const'
 
 export interface Player {
   name: string,
   avatar?: string,
   type: PlayerType,
   chess_type: Chess
+}
+
+export interface Position {
+  x: number,
+  y: number
 }
 
 export interface GameMetadata {
@@ -24,6 +29,7 @@ export interface GameState {
   chessboard: Array<Array<Chess>>,
   now_playing: Chess,
   move_count: number,
+  disabled_positions: Array<Position>,
   metadata: GameMetadata,
   statistics: Array<DynamicStatistics>
 }
@@ -49,6 +55,26 @@ export interface UiState {
   game_result: GameResult
 }
 
+export class RemoteGameRequest {
+  static counter = 0
+
+  id: number
+  username: string
+  sendTo?: string
+  chess: Chess
+  timestamp: number
+  result: RemoteGameRequestResult
+
+  constructor(username: string, chess: Chess, sendTo?: string, timestamp: number = Date.now(), result: RemoteGameRequestResult = RemoteGameRequestResult.WAITING) {
+    this.id = RemoteGameRequest.counter++
+    this.username = username
+    this.sendTo = sendTo
+    this.chess = chess
+    this.timestamp = timestamp
+    this.result = result
+  }
+}
+
 export interface RemoteConnectState {
   is_connected: boolean,
   is_connecting: boolean,
@@ -56,8 +82,8 @@ export interface RemoteConnectState {
   failed_message?: string,
   remote_ip?: string,
   remote_port?: number,
-  is_requesting: boolean,
-  requesting_chess: Chess
+  my_request?: RemoteGameRequest | null,
+  received_requests: Array<RemoteGameRequest>
 }
 
 export interface ChatMessage {

@@ -35,7 +35,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send('sendData', opCode, data1 || '', data2 || '')
   },
   sendDataAsync: (opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
-    ipcRenderer.invoke('net:sendData', opCode, data1 || '', data2 || '')
+    return ipcRenderer.invoke('net:sendData', opCode, data1 || '', data2 || '')
   },
   exit: () => {
     ipcRenderer.send('exit')

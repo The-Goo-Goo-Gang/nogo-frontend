@@ -30,6 +30,9 @@
     </div>
   </div>
   <div id="alert-container"></div>
+  <Transition name="slide-into">
+    <ChatListView class="chat-list" v-show="showChatList" @close="showChatList = !showChatList" ref="chat" />
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -37,21 +40,41 @@ import WindowMinimizeIcon from 'vue-material-design-icons/WindowMinimize.vue'
 import WindowCloseIcon from 'vue-material-design-icons/WindowClose.vue'
 import ChevronRightIcon from 'vue-material-design-icons/ChevronRight.vue'
 import MusicPlayer from './components/player/MusicPlayer.vue'
-import { computed, onMounted, Ref, ref, watch } from 'vue'
-import { BackgroundMusicType, OpCode } from './const'
+import ChatListView from './components/ChatListView.vue'
+import { computed, onMounted, onUnmounted, provide, Ref, ref, watch } from 'vue'
+import { BackgroundMusicType, OpCode, RemoteGameRequestResult, Chess } from './const'
 import { useStore } from './store'
 import { SongData } from './components/player/data'
 import { Alert } from './components/alert/alert'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { openChatKey, openChatListKey } from './keys'
+import { RemoteGameRequest } from './state'
+import dayjs from 'dayjs'
 
 const router = useRouter()
+const route = useRoute()
 const store = useStore()
 
+const chat = ref<InstanceType<typeof ChatListView> | null>(null)
+const listenerId = ref(-1)
+const showChatList = ref(false)
 const playBgm = ref(false)
 const bgmPlaylist: Ref<Array<SongData>> = ref([])
 const shouldPlayBgm = computed(() => {
   return playBgm.value && bgmPlaylist.value.length > 0
 })
+
+const openChatList = () => {
+  showChatList.value = true
+}
+
+const openChat = (target: string) => {
+  showChatList.value = true
+  chat.value?.openChat(target)
+}
+
+provide(openChatListKey, openChatList)
+provide(openChatKey, openChat)
 
 const fetchPlaylist = () => {
   if (store.state.config.bgmType === BackgroundMusicType.LOCAL && store.state.config.bgmFilePath) {
@@ -99,7 +122,7 @@ const stopPlayBgm = () => {
 }
 
 onMounted(() => {
-  window.electronAPI.onData((opCode, data1, data2) => {
+  listenerId.value = window.electronAPI.onData((opCode, data1, data2) => {
     switch (opCode) {
       case OpCode.UPDATE_UI_STATE_OP:
         if (data1 && data2) store.commit('updateState', JSON.parse(data2))
@@ -125,18 +148,74 @@ onMounted(() => {
         }
         break
       case OpCode.READY_OP:
-        store.dispatch('receiveReady', { data1, data2 })
+        if (!data1) break
+        if (store.state.remote.is_connected && store.state.remote.my_request?.result === RemoteGameRequestResult.WAITING) {
+          store.commit('receiveRequestResult', { result: RemoteGameRequestResult.ACCEPTED, username: data1 })
+        } else {
+          if (!data2) break
+          const request = new RemoteGameRequest(data1, data2 === 'b' ? Chess.Black : Chess.White)
+          store.commit('receiveRequest', request)
+          console.log(route.name?.toString())
+          if (route.name !== 'startOnlineGame') {
+            Alert({
+              title: '收到对局申请',
+              content: `玩家 ${data1} 申请执${data2 === 'b' ? '黑' : '白'}棋与你进行对局，是否同意？\n${dayjs(request.timestamp).format('YYYY-MM-DD HH:mm:ss')}`,
+              positiveButtonText: '同意',
+              negativeButtonText: '拒绝',
+              onConfirm: () => {
+                store.dispatch('acceptRemoteRequest', request)
+              },
+              onClose: () => {
+                store.dispatch('rejectRemoteRequest', request)
+              }
+            })
+          }
+        }
         break
       case OpCode.REJECT_OP:
-        store.dispatch('receiveReject', { data1, data2 })
+        if (!data1) break
+        if (store.state.remote.is_connected && store.state.remote.my_request?.result === RemoteGameRequestResult.WAITING) {
+          store.commit('receiveRequestResult', { result: RemoteGameRequestResult.REJECTED, username: data1 })
+          if (route.name !== 'startOnlineGame') {
+            Alert({
+              title: `${data1} 拒绝了你的对局申请`,
+              content: '你可以再次申请对局或断开连接',
+              positiveButtonText: '再次申请',
+              neutralButtonText: '聊天',
+              negativeButtonText: '断开连接',
+              onConfirm: () => {
+                store.dispatch('requestRemoteGame', { username: store.state.config.onlineUsername, chessType: store.state.remote.my_request?.chess })
+              },
+              onClose: () => {
+                store.dispatch('leaveOnlineGame')
+              },
+              onNeutralClicked: () => {
+                openChat(data1)
+              }
+            })
+          }
+        }
         break
       case OpCode.LEAVE_OP:
-        Alert({ title: '对方已离开', content: '对方已离开游戏', timeout: 3000 })
-        router.push('/')
-        store.dispatch('receiveLeave')
+        if (store.state.remote.is_connected) {
+          Alert({ title: '对方已离开', content: '对方已离开游戏', timeout: 3000 })
+          router.push('/')
+        }
+        store.dispatch('receiveLeave', data1)
         break
       case OpCode.CHAT_RECEIVE_MESSAGE_OP:
-        Alert({ title: `收到来自${data2}的消息`, content: data1, timeout: 3000 })
+        if (!data1 || !data2) break
+        if (route.name !== 'startOnlineGame') {
+          Alert({
+            title: `${data2} 给你发来了一条消息`,
+            content: data1,
+            positiveButtonText: '回复',
+            negativeButtonText: '忽略',
+            onConfirm: () => {
+              openChat(data2)
+            }
+          })
+        }
         store.commit('receiveChatMessage', { message: data1, username: data2 })
         break
       case OpCode.CHAT_USERNAME_UPDATE_OP:
@@ -150,6 +229,10 @@ onMounted(() => {
   if (store.state.config.bgm) {
     startPlayBgm()
   }
+})
+
+onUnmounted(() => {
+  window.electronAPI.removeOnDataListener(listenerId.value)
 })
 
 watch(
@@ -182,6 +265,15 @@ const exit = () => {
 const minimize = () => {
   window.electronAPI.send('minimize')
 }
+
+const hasAcceptedRequest = computed(() => store.getters.hasAcceptedRequest)
+const isGaming = computed(() => store.getters.isGaming)
+
+watch(() => hasAcceptedRequest.value && isGaming.value, isGaming => {
+  if (isGaming) {
+    router.push('/game/online')
+  }
+})
 </script>
 
 <style lang="scss">
@@ -358,5 +450,23 @@ const minimize = () => {
   z-index: 999;
   display: flex;
   flex-direction: column;
+}
+</style>
+
+<style lang="scss" scoped>
+.chat-list {
+  position: fixed;
+  margin: 64px 16px 16px 16px;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: calc(100% - 64px - 16px - 10px);
+  background-color: rgba($color: #FFF, $alpha: 0.35);
+  backdrop-filter: blur(16px);
+}
+
+.chat-view {
+  height: calc(100% - 48px);
+  background: none;
 }
 </style>

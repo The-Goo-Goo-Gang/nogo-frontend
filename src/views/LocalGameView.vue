@@ -10,7 +10,8 @@
         </div>
       </div>
       <div class="game-chessboard">
-        <GameChessboard :width="400" :height="400" :chesses="chessboard" @chess-clicked="onChessClicked"></GameChessboard>
+        <GameChessboard :width="400" :height="400" :chesses="chessboard" :disabled-position="disabledPosition"
+          @chess-clicked="onChessClicked"></GameChessboard>
       </div>
       <div class="player-container">
         <div class="timer" :style="{ opacity: shouldStartTimer && timerRunning && isOurPlayerPlaying ? 1 : 0 }">
@@ -81,10 +82,11 @@ const giveUp = () => {
 
 const timeout = computed(() => store.state.uiState.game?.metadata.timeout || 30)
 const timerRunning = computed(() => store.state.timer.running)
-const timerProgress = computed(() => store.getters.timerProgress)
+const timerProgress = computed(() => 100 - store.getters.timerProgress)
 const shouldStartTimer = computed(() => store.state.uiState.status === GameStatus.ON_GOING && store.state.uiState.game?.move_count)
 
 const chessboard = computed(() => store.getters.chessboard)
+const disabledPosition = computed(() => store.state.uiState.game?.disabled_positions || [])
 const nowPlayer = computed(() => {
   if (!store.state.uiState.game) return null
   return store.state.uiState.game.now_playing === store.state.uiState.game.metadata.player_our.chess_type ? store.state.uiState.game.metadata.player_our : store.state.uiState.game.metadata.player_opposing

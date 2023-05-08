@@ -1,10 +1,9 @@
 import { createStore, Store, useStore as baseUseStore } from 'vuex'
 import { GlobalState } from './type'
 import { InjectionKey, reactive } from 'vue'
-import { Chess, GameStatus, LocalGameType, OpCode, PlayerType, WinType } from '@/const'
-import { ChatMessage, UiState } from '@/state'
+import { Chess, GameStatus, LocalGameType, OpCode, PlayerType, RemoteGameRequestResult, WinType } from '@/const'
+import { ChatMessage, UiState, RemoteGameRequest } from '@/state'
 import { DEFAULT_CONFIG, getConfigFromLocalStorage, NoGoConfig, NoGoConfigDiff } from '@/config'
-import { Alert } from '@/components/alert/alert'
 
 export const key: InjectionKey<Store<GlobalState>> = Symbol('globalState')
 
@@ -18,6 +17,7 @@ export const store = createStore<GlobalState>({
         chessboard: [[]],
         now_playing: Chess.None,
         move_count: 0,
+        disabled_positions: [],
         metadata: {
           size: 9,
           player_opposing: {
@@ -51,14 +51,14 @@ export const store = createStore<GlobalState>({
       is_connected: false,
       is_connecting: false,
       is_connecting_failed: false,
-      is_requesting: false,
-      requesting_chess: Chess.None
+      my_request: null,
+      received_requests: []
     },
     chat_messages: new Map()
   },
   getters: {
     isGaming(state) {
-      return state.uiState.is_gaming
+      return state.uiState.status === GameStatus.ON_GOING
     },
     timerEnd(state) {
       return state.timer.current_timestamp >= state.timer.end_timestamp
@@ -82,6 +82,13 @@ export const store = createStore<GlobalState>({
         }
         return arr
       })()))
+    },
+    receivedWaitingRequests(state) {
+      return state.remote.received_requests.filter(request => request.result === RemoteGameRequestResult.WAITING)
+    },
+    hasAcceptedRequest(state) {
+      return state.remote.my_request?.result === RemoteGameRequestResult.ACCEPTED ||
+        state.remote.received_requests.some(request => request.result === RemoteGameRequestResult.ACCEPTED)
     }
   },
   mutations: {
@@ -140,16 +147,38 @@ export const store = createStore<GlobalState>({
       }
     },
     requestRemoteGame(state, payload: { chessType: Chess }) {
-      state.remote.is_requesting = true
-      state.remote.requesting_chess = payload.chessType
+      state.remote.my_request = new RemoteGameRequest(state.config.onlineUsername, payload.chessType)
     },
-    receiveAccept(state) {
-      state.remote.is_requesting = false
+    receiveRequest(state, payload: RemoteGameRequest) {
+      state.remote.received_requests.push(payload)
+      state.remote.received_requests = state.remote.received_requests.sort((a, b) => a.id - b.id)
     },
-    acceptRequest(state) {
+    receiveRequestResult(state, payload: { result: RemoteGameRequestResult.ACCEPTED | RemoteGameRequestResult.REJECTED, username: string }) {
+      if (!state.remote.my_request) return
+      state.remote.my_request.result = payload.result
+      state.remote.my_request.sendTo = payload.username
+    },
+    acceptRemoteRequest(state, payload: RemoteGameRequest) {
       state.remote.is_connected = true
+      state.remote.received_requests.forEach((request) => {
+        if (request.id === payload.id) {
+          request.result = RemoteGameRequestResult.ACCEPTED
+        }
+      })
+    },
+    rejectRemoteRequest(state, payload: RemoteGameRequest) {
+      state.remote.received_requests.forEach((request) => {
+        if (request.id === payload.id) {
+          request.result = RemoteGameRequestResult.REJECTED
+        }
+      })
     },
     leaveOnlineGame(state) {
+      if (state.uiState.game) {
+        const opponent = state.uiState.game.metadata.player_opposing.name
+        state.remote.received_requests = state.remote.received_requests.filter(request => request.username !== opponent)
+      }
+
       state.uiState.status = GameStatus.NOT_PREPARED
       state.uiState.is_gaming = false
       delete state.uiState.game
@@ -157,7 +186,10 @@ export const store = createStore<GlobalState>({
       state.remote.is_connected = false
       state.remote.is_connecting = false
       state.remote.is_connecting_failed = false
-      state.remote.is_requesting = false
+      state.remote.my_request = null
+    },
+    receiveLeave(state, payload: string) {
+      state.remote.received_requests = state.remote.received_requests.filter(request => request.username !== payload)
     },
     receiveChatMessage(state, payload: { username: string, message: string }) {
       if (!state.chat_messages.has(payload.username)) {
@@ -249,53 +281,22 @@ export const store = createStore<GlobalState>({
         commit('requestRemoteGame', payload)
       }
     },
-    receiveReady({ commit, state }, payload: { data1: string, data2: string | undefined }) {
-      const { data1, data2 } = payload
-      if (state.remote.is_connected && state.remote.is_requesting) {
-        commit('receiveAccept')
-      } else {
-        Alert({
-          title: `玩家 ${data1} 申请执${data2 === 'b' ? '黑' : '白'}棋与你进行对局`,
-          content: '是否同意？',
-          positiveButtonText: '同意',
-          negativeButtonText: '拒绝',
-          onConfirm: () => {
-            const myChess = data2 === 'b' ? 'w' : 'b'
-            window.electronAPI.sendDataAsync(OpCode.READY_OP, state.config.onlineUsername, myChess)
-              .then(() => {
-                commit('acceptRequest')
-              })
-          },
-          onClose: () => {
-            window.electronAPI.sendData(OpCode.REJECT_OP)
-          }
-        })
-      }
-    },
-    receiveReject({ commit, dispatch, state }) {
-      if (state.remote.is_connected && state.remote.is_requesting) {
-        commit('receiveReject')
-        Alert({
-          title: '对方拒绝了你的对局申请',
-          content: '你可以再次申请对局或断开连接',
-          positiveButtonText: '再次申请',
-          negativeButtonText: '断开连接',
-          onConfirm: () => {
-            dispatch('requestRemoteGame', { username: state.config.onlineUsername, chessType: state.remote.requesting_chess })
-          },
-          onClose: () => {
-            dispatch('leaveOnlineGame')
-          }
-        })
-      }
-    },
     async leaveOnlineGame({ commit, state }) {
       if (state.remote.is_connected) {
         await window.electronAPI.sendDataAsync(OpCode.LEAVE_OP)
       }
       commit('leaveOnlineGame')
     },
-    receiveLeave({ commit }) {
+    async acceptRemoteRequest({ commit, state }, payload: RemoteGameRequest) {
+      await window.electronAPI.sendDataAsync(OpCode.READY_OP, state.config.onlineUsername, payload.chess === Chess.Black ? 'w' : 'b')
+      commit('acceptRemoteRequest', payload)
+    },
+    async rejectRemoteRequest({ commit, state }, payload: RemoteGameRequest) {
+      await window.electronAPI.sendDataAsync(OpCode.REJECT_OP, state.config.onlineUsername)
+      commit('rejectRemoteRequest', payload)
+    },
+    receiveLeave({ commit }, payload: string | undefined) {
+      if (payload) commit('receiveLeave', payload)
       commit('leaveOnlineGame')
     },
     async sendChatMessage({ commit }, payload: { target: string, message: string }) {

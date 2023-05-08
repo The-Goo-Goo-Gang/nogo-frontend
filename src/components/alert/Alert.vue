@@ -12,7 +12,8 @@
         </div>
         <div class="alert-actions" v-if="showActions">
           <button class="game-action-btn fill" @click="onConfirm">{{ positiveButtonText }}</button>
-          <button class="game-action-btn" @click="close" v-if="!!neutralButtonText">{{ neutralButtonText }}</button>
+          <button class="game-action-btn" @click="onNeutralClicked" v-if="!!neutralButtonText">{{ neutralButtonText
+          }}</button>
           <button class="game-action-btn" @click="close">{{ negativeButtonText }}</button>
         </div>
       </div>

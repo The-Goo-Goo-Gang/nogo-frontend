@@ -31,8 +31,7 @@ const chatMessages = computed(() => {
 })
 const chatInput = ref('')
 const sendChatMessage = () => {
-  if (!store.state.uiState.game) return
-  store.dispatch('sendChatMessage', { target: store.state.uiState.game.metadata.player_opposing.name, message: chatInput.value })
+  store.dispatch('sendChatMessage', { target: props.target, message: chatInput.value })
   chatInput.value = ''
 }
 </script>

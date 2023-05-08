@@ -1,6 +1,6 @@
 <template>
   <div class="chat-list">
-    <TitleBar title="聊天" @back="chatBack">
+    <TitleBar :title="currentChatTarget ? currentChatTarget : '聊天'" @back="chatBack">
       <template #back-icon v-if="!currentChatTarget">
         <CloseIcon class="icon-2x" />
       </template>
@@ -38,16 +38,20 @@ import { useStore } from '@/store'
 import { OpCode } from '@/const'
 
 const store = useStore()
+const emit = defineEmits(['close'])
 
-const showChatList = ref(false)
 const listenerId = ref(-1)
 const currentChatTarget = ref('')
 const chatBack = () => {
   if (currentChatTarget.value) {
     currentChatTarget.value = ''
   } else {
-    showChatList.value = false
+    emit('close')
   }
+}
+
+const openChat = (target: string) => {
+  currentChatTarget.value = target
 }
 
 onMounted(() => {
@@ -60,6 +64,8 @@ onMounted(() => {
 onUnmounted(() => {
   if (listenerId.value !== -1) window.electronAPI.removeOnDataListener(listenerId.value)
 })
+
+defineExpose({ openChat })
 </script>
 
 <style lang="scss">

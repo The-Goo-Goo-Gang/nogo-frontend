@@ -8,6 +8,9 @@ import 'vue3-lottie/dist/style.css'
 import '@/styles/index.scss'
 import 'normalize.css'
 import 'vue-material-design-icons/styles.css'
+import dayjs from 'dayjs'
+
+dayjs.locale('zh-cn')
 
 createApp(App)
   // .use(network)

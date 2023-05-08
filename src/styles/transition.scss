@@ -1,0 +1,14 @@
+.slide-into-enter-active,
+.slide-into-leave-active {
+  transition: transform 0.3s ease-in-out;
+}
+
+.slide-into-enter-from,
+.slide-into-leave-to {
+  transform: translateX(100%);
+}
+
+.slide-into-enter-to,
+.slide-into-leave-from {
+  opacity: 1;
+}

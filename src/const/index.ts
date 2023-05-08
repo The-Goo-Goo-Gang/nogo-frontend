@@ -33,6 +33,13 @@ export enum LocalGameType {
   PVE
 }
 
+export enum RemoteGameRequestResult {
+  WAITING = 1,
+  ACCEPTED,
+  REJECTED,
+  CONNECT_FAILED
+}
+
 export enum OpCode {
   READY_OP = 200000,
   REJECT_OP,

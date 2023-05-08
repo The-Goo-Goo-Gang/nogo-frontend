@@ -1,4 +1,5 @@
 @import './variables.scss';
+@import './transition.scss';
 
 .game-home {
   text-align: center;
@@ -56,18 +57,19 @@
   }
 }
 
-.game-view-form-item-title + .game-view-form-item-content {
+.game-view-item-title + .game-view-item-content {
   margin-top: 0.5rem;
 }
 
-.game-view-form-item + .game-view-form-item {
+.game-view-item + .game-view-item {
   margin-top: 1rem;
 }
 
-.game-view-form-item-content-item-label {
+.game-view-item-content-form-label {
   display: flex;
   align-items: center;
   flex-direction: row;
+  flex-wrap: wrap;
   justify-content: center;
   padding: 0.5rem 0rem;
   cursor: pointer;
@@ -147,6 +149,7 @@
   }
 
   input[type='text'] {
+    background-color: rgba($color: #FFFFFF, $alpha: 0.5);
     border: 1px solid #d3d3d3;
     border-radius: 4px;
     padding: 0.5rem;
@@ -156,12 +159,40 @@
 
     &:focus {
       border-color: $theme-color;
+      background-color: rgba($color: #FFFFFF, $alpha: 0.75);
       box-shadow: 0 0 0 2px rgba($color: $theme-color, $alpha: 0.2);
+    }
+
+    &:invalid {
+      border-color: #F44336;
+      background-color: rgba($color: #F44336, $alpha: 0.15);
+      box-shadow: 0 0 0 2px rgba($color: #F44336, $alpha: 0.05);
     }
   }
 }
 
-.game-view-form-item-content {
+.game-view-item-content-form-label {
+  &::after {
+    content: '';
+    position: relative;
+    width: 100%;
+    top: 2px;
+    left: 0;
+    right: 0;
+    color: #F44336;
+    line-height: 12px;
+    height: 12px;
+    font-size: 12px;
+  }
+
+  &:has(input:invalid) {
+    &::after {
+      content: attr(data-error-text);
+    }
+  }
+}
+
+.game-view-item-content {
   display: flex;
   flex-direction: row;
   gap: 1rem;
@@ -173,10 +204,10 @@
     align-items: stretch;
     align-content: stretch;
 
-    .game-view-form-item-content-item {
+    .game-view-item-content-form {
       width: 100%;
 
-      .game-view-form-item-content-item-label {
+      .game-view-item-content-form-label {
         align-items: stretch;
         align-content: stretch;
 
@@ -188,4 +219,49 @@
 
 .game-view-form {
   padding: 16px;
+}
+
+.game-container {
+  height: 94%;
+  width: 96%;
+  max-width: 1280px;
+
+  @media (min-width: 600px) {
+    height: 92%;
+    width: 94%;
+  }
+
+  @media (min-width: 1024px) {
+    height: 90%;
+    width: 92%;
+  }
+}
+
+.game-left-container {
+  padding: 16px;
+  justify-content: space-between;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.game-right-container {
+  padding: 16px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 16px;
+  align-content: stretch;
+  align-items: center;
+  // flex: 1;
+}
+
+.game-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  padding: 0em;
+  gap: 16px;
 }
