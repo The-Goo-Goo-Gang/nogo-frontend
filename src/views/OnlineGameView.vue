@@ -27,7 +27,7 @@
         <button class="game-action-btn fill" @click="giveUp" :disabled="!isOurPlayerPlaying">认输</button>
       </div>
       <div class="game-chat-container">
-        <ChatView class="game-chat" v-if="store.state.uiState.game"
+        <ChatView class="game-chat" v-if="store.state.uiState.game" ref="chat"
           :target="store.state.uiState.game.metadata.player_opposing.name" />
       </div>
     </div>
@@ -64,6 +64,7 @@ import { computed, watch, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const showRestartDialog = ref(false)
+const chat = ref<InstanceType<typeof ChatView> | null>(null)
 
 const store = useStore()
 const router = useRouter()
@@ -159,6 +160,7 @@ onMounted(() => {
 
 .game-ongoing {
   z-index: 1;
+  align-items: stretch;
 }
 
 .game-result {
@@ -208,5 +210,9 @@ onMounted(() => {
   border-radius: 32px;
   backdrop-filter: blur(0px);
   display: inline-block;
+}
+
+.game-chat {
+  height: 45vh;
 }
 </style>
