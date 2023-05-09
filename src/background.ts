@@ -15,10 +15,12 @@ import { changeFileName } from './utils/file'
 import { getPortPromise } from 'portfinder'
 import { getLocalIpAddresses } from './utils/net'
 import { getConfig, setConfig } from './config/config'
+import logger from 'electron-log'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 const log = (...args: any[]) => {
+  logger.info(...args)
   console.log(...args)
   BrowserWindow.getAllWindows().forEach(window => {
     window.webContents.send('log', ...args)
