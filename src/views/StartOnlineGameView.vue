@@ -1,5 +1,5 @@
 <template>
-  <div class="game-container game-grid" style="align-items: stretch; align-self: center; align-content: center;">
+  <div class="game-container game-grid" style="align-items: start; align-self: center; align-content: center;">
     <div class="game-left-container">
       <div class="game-view">
         <TitleBar title="多人游戏" @back="back" />
@@ -86,16 +86,20 @@
                 <div class="game-view-item-content">
                   <div class="game-view-item-content-form remote-address-inputs">
                     <label class="game-view-item-content-form-label remote-host-input">
-                      <input type="text" v-model.lazy="remoteHost" placeholder="IP 地址" />
+                      <input type="text" v-model.lazy="remoteHost" placeholder="IP 地址"
+                        pattern="^([0,1]?\d{1,2}|2([0-4][0-9]|5[0-5]))(\.([0,1]?\d{1,2}|2([0-4][0-9]|5[0-5]))){3}$" />
                     </label>
                     <label class="game-view-item-content-form-label remote-port-input">
-                      <input type="text" v-model.lazy="remotePort" placeholder="端口" />
+                      <input type="text" v-model.lazy="remotePort" placeholder="端口"
+                        pattern="^((6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])|[0-5]?\d{0,4})$" />
                     </label>
                   </div>
                 </div>
                 <div class="game-view-item-actions">
-                  <button class="game-action-btn fill" @click="requestRemoteGame(Chess.Black)">申请执黑对局</button>
-                  <button class="game-action-btn fill" @click="requestRemoteGame(Chess.White)">申请执白对局</button>
+                  <button class="game-action-btn fill" @click="requestRemoteGame(Chess.Black)"
+                    :disabled="!remoteHostValid || !remotePortValid">申请执黑对局</button>
+                  <button class="game-action-btn fill" @click="requestRemoteGame(Chess.White)"
+                    :disabled="!remoteHostValid || !remotePortValid">申请执白对局</button>
                 </div>
               </template>
             </div>
@@ -107,17 +111,22 @@
       <div class="remote-waiting-request-list">
         <div class="remote-waiting-request-list-title">待处理的申请</div>
         <template v-if="waitingRemoteRequests.length">
-          <div class="remote-waiting-request" v-for="request in waitingRemoteRequests" :key="request.id">
-            <div class="remote-waiting-request-title">来自 {{ request.username }} 的申请</div>
-            <div class="remote-waiting-request-time">{{ formatDateTime(request.timestamp) }}</div>
+          <div class="remote-waiting-request">
+            <div class="remote-waiting-request-title">来自 {{ waitingRemoteRequests[0].username }} 的申请</div>
+            <div class="remote-waiting-request-time">{{ formatDateTime(waitingRemoteRequests[0].timestamp) }}</div>
             <div class="remote-waiting-request-content">
-              对方申请执{{ request.chess === Chess.Black ? '黑' : '白' }}对局
+              对方申请执{{ waitingRemoteRequests[0].chess === Chess.Black ? '黑' : '白' }}对局
             </div>
             <div class="remote-waiting-request-actions">
-              <button class="game-action-btn fill" @click="store.dispatch('acceptRemoteRequest', request)">接受</button>
-              <button class="game-action-btn fill" @click="store.dispatch('rejectRemoteRequest', request)">拒绝</button>
+              <button class="game-action-btn fill"
+                @click="store.dispatch('acceptRemoteRequest', waitingRemoteRequests[0])">接受</button>
+              <button class="game-action-btn fill"
+                @click="store.dispatch('rejectRemoteRequest', waitingRemoteRequests[0])">拒绝</button>
             </div>
           </div>
+          <template v-if="waitingRemoteRequests.length > 1">
+            还有 {{ waitingRemoteRequests.length - 1 }} 个申请
+          </template>
         </template>
         <template v-else>
           <div class="remote-waiting-request-list-empty">
@@ -158,9 +167,14 @@ const waitingRemoteRequests = computed(() => store.getters.receivedWaitingReques
 
 const remoteHost = ref('')
 const remotePort = ref('')
+const remoteHostValid = computed(() => /^([0,1]?\d{1,2}|2([0-4][0-9]|5[0-5]))(\.([0,1]?\d{1,2}|2([0-4][0-9]|5[0-5]))){3}$/g.test(remoteHost.value))
+const remotePortValid = computed(() => /^((6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])|[0-5]?\d{0,4})$/g.test(remotePort.value))
 const waitingForConnect = ref(false)
 const requestChessType = ref(Chess.None)
 const requestRemoteGame = (chessType: Chess) => {
+  if (!remoteHostValid.value || !remotePortValid.value) {
+    return
+  }
   requestChessType.value = chessType
   if (store.state.remote.is_connected) {
     if (store.state.remote.remote_ip === remoteHost.value && store.state.remote.remote_port === parseInt(remotePort.value)) {

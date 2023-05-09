@@ -47,7 +47,7 @@ import { useStore } from './store'
 import { SongData } from './components/player/data'
 import { Alert } from './components/alert/alert'
 import { useRoute, useRouter } from 'vue-router'
-import { openChatKey, openChatListKey } from './keys'
+import { nowTimestampKey, openChatKey, openChatListKey } from './keys'
 import { RemoteGameRequest } from './state'
 import dayjs from 'dayjs'
 
@@ -73,8 +73,14 @@ const openChat = (target: string) => {
   chat.value?.openChat(target)
 }
 
+const nowTimestamp = ref(Date.now())
+setInterval(() => {
+  nowTimestamp.value = Date.now()
+}, 1000)
+
 provide(openChatListKey, openChatList)
 provide(openChatKey, openChat)
+provide(nowTimestampKey, nowTimestamp)
 
 const fetchPlaylist = () => {
   if (store.state.config.bgmType === BackgroundMusicType.LOCAL && store.state.config.bgmFilePath) {

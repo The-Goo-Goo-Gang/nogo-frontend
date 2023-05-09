@@ -32,7 +32,9 @@ export interface GameState {
   disabled_positions: Array<Position>,
   last_move?: Position,
   metadata: GameMetadata,
-  statistics: Array<DynamicStatistics>
+  statistics: Array<DynamicStatistics>,
+  start_time: number,
+  end_time: number
 }
 
 export interface TimerState {

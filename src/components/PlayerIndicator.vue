@@ -40,7 +40,7 @@ withDefaults(defineProps<{
 .player-indicator {
   padding: 8px 16px;
   background: rgba($color: #FFFFFF, $alpha: 0.5);
-  border-radius: 32px;
+  border-radius: 16px;
   backdrop-filter: blur(0px);
   user-select: none;
 }

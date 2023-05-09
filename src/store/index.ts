@@ -32,7 +32,9 @@ export const store = createStore<GlobalState>({
           },
           timeout: 60
         },
-        statistics: []
+        statistics: [],
+        start_time: 0,
+        end_time: 0
       },
       game_result: {
         winner: Chess.None,

@@ -23,8 +23,18 @@
       </div>
     </div>
     <div class="game-right-container right">
+      <div class="game-stats">
+        <div class="game-stat-item">
+          <div class="game-stat-item-title">用时</div>
+          <div class="game-stat-item-value">{{ gameUsedTimeText }}</div>
+        </div>
+        <div class="game-stat-item">
+          <div class="game-stat-item-title">步数</div>
+          <div class="game-stat-item-value">{{ store.state.uiState.game?.move_count }}</div>
+        </div>
+      </div>
       <div class="game-actions">
-        <button class="game-action-btn fill" @click="giveUp" :disabled="!isOurPlayerPlaying">认输</button>
+        <button class="game-action-btn fill give-up-btn" @click="giveUp" :disabled="!isOurPlayerPlaying">认输</button>
       </div>
       <div class="game-chat-container">
         <ChatView class="game-chat" v-if="store.state.uiState.game" ref="chat"
@@ -37,6 +47,8 @@
       <h3>Game Over!</h3>
       <p>{{ winnerName }}获胜</p>
       <p v-if="false">原因：{{ winReasonText }}</p>
+      <p>用时：{{ gameUsedTimeText }}</p>
+      <p>步数：{{ store.state.uiState.game?.move_count }}</p>
       <div class="game-actions">
         <button class="game-action-btn" @click="showRestartDialog = true">再来一局</button>
         <button class="game-action-btn" @click="exitOnlineGame">退出游戏</button>
@@ -60,14 +72,16 @@ import ProgressBar from '@/components/ProgressBar.vue'
 import ChatView from '@/components/ChatView.vue'
 import { useStore } from '@/store'
 import { Chess, GameStatus, OpCode, PlayerType, WinType } from '@/const'
-import { computed, watch, onMounted, ref } from 'vue'
+import { computed, watch, onMounted, ref, inject } from 'vue'
 import { useRouter } from 'vue-router'
+import { nowTimestampKey } from '@/keys'
 
 const showRestartDialog = ref(false)
 const chat = ref<InstanceType<typeof ChatView> | null>(null)
 
 const store = useStore()
 const router = useRouter()
+const nowTimestamp = inject(nowTimestampKey, ref(0))
 
 const restartOnlineGame = (chessType: Chess) => {
   showRestartDialog.value = false
@@ -140,6 +154,17 @@ const winReasonText = computed(() => {
     return ''
   }
 })
+const gameUsedTimeText = computed(() => {
+  if (!store.state.uiState.game || store.state.uiState.status === GameStatus.NOT_PREPARED) return ''
+  let seconds = Math.floor(((store.state.uiState.status === GameStatus.GAME_OVER ? store.state.uiState.game.end_time : nowTimestamp.value) - store.state.uiState.game.start_time) / 1000)
+  let minutes = Math.floor(seconds / 60)
+  seconds = seconds % 60
+  if (!minutes) return `${seconds} 秒`
+  const hours = Math.floor(minutes / 60)
+  minutes = minutes % 60
+  if (!hours) return `${minutes} 分钟 ${seconds} 秒`
+  return `${hours} 时 ${minutes} 分钟 ${seconds} 秒`
+})
 
 watch(nowPlayer, () => {
   if (shouldStartTimer.value) {
@@ -207,12 +232,50 @@ onMounted(() => {
 .game-chessboard {
   padding: 16px;
   background: rgba($color: #FFFFFF, $alpha: 0.5);
-  border-radius: 32px;
+  border-radius: 16px;
   backdrop-filter: blur(0px);
   display: inline-block;
 }
 
 .game-chat {
   height: 45vh;
+}
+
+.right {
+  align-items: stretch;
+}
+
+.give-up-btn {
+  border-radius: 16px;
+}
+
+.game-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 8px 16px;
+  padding: 16px;
+  background: rgba($color: #FFFFFF, $alpha: 0.5);
+  border-radius: 16px;
+  backdrop-filter: blur(0px);
+
+  .game-stat-item {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    align-items: center;
+    justify-content: space-between;
+    flex: 0 0 50%;
+  }
+
+  .game-stat-item-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #000000;
+  }
+
+  .game-stat-item-value {
+    font-size: 14px;
+    color: #000000;
+  }
 }
 </style>
