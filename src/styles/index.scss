@@ -33,7 +33,7 @@
   border: 0;
   transition: color 0.3s $bezier, background .3s $bezier;
 
-  &:not(.disabled) {
+  &:not([disabled]) {
     cursor: pointer;
 
     &:hover {
@@ -47,7 +47,7 @@
     }
   }
 
-  &.disabled {
+  &[disabled] {
     opacity: 0.75;
     cursor: not-allowed;
   }
