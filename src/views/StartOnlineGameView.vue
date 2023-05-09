@@ -25,7 +25,64 @@
             </div>
             <div class="game-view-item">
               <div class="game-view-item-title">连接到另一个玩家</div>
-              <template v-if="!store.state.remote.my_request">
+              <template v-if="store.state.remote.is_connected">
+                <template v-if="!!store.state.remote.my_request">
+                  <template v-if="store.state.remote.my_request.result === RemoteGameRequestResult.WAITING">
+                    <div class="game-view-item-content"
+                      style="justify-content: flex-start; gap: 8px; align-items: center;">
+                      <ProgressCircular />
+                      等待对方接受申请...
+                    </div>
+                    <div class="game-view-item-actions">
+                      <button class="game-action-btn fill" @click="store.dispatch('leaveOnlineGame')">取消</button>
+                    </div>
+                  </template>
+                  <template v-else-if="store.state.remote.my_request.result === RemoteGameRequestResult.ACCEPTED">
+                    <div class="game-view-item-content">
+                      对方已接受申请，即将进入游戏
+                    </div>
+                  </template>
+                  <template v-else-if="store.state.remote.my_request.result === RemoteGameRequestResult.REJECTED">
+                    <div class="game-view-item-content">
+                      对方已拒绝申请
+                    </div>
+                    <div class="game-view-item-actions">
+                      <button class="game-action-btn fill"
+                        @click="store.dispatch('requestRemoteGame', { chessType: store.state.remote.my_request.chess })">再次申请</button>
+                      <button class="game-action-btn" v-if="store.state.remote.my_request.sendTo"
+                        @click="openChat(store.state.remote.my_request.sendTo)">聊天</button>
+                      <button class="game-action-btn" @click="store.dispatch('leaveOnlineGame')">断开连接</button>
+                    </div>
+                  </template>
+                </template>
+                <template v-else>
+                  <div class="game-view-item-content">
+                    已连接到 {{ store.state.remote.connected_remote_username }}
+                  </div>
+                  <div class="game-view-item-actions">
+                    <button class="game-action-btn fill" @click="store.dispatch('leaveOnlineGame')">断开连接</button>
+                    <button class="game-action-btn"
+                      @click="openChat(store.state.remote.connected_remote_username)">聊天</button>
+                  </div>
+                </template>
+              </template>
+              <template v-else-if="store.state.remote.is_connecting">
+                <div class="game-view-item-content">
+                  正在连接到 {{ store.state.remote.remote_ip }}:{{ store.state.remote.remote_port }}...
+                </div>
+                <div class="game-view-item-actions">
+                  <button class="game-action-btn fill" @click="store.dispatch('leaveOnlineGame')">取消</button>
+                </div>
+              </template>
+              <template v-else-if="store.state.remote.is_connecting_failed">
+                <div class="game-view-item-content">
+                  连接 {{ store.state.remote.remote_ip }}:{{ store.state.remote.remote_port }} 失败
+                </div>
+                <div class="game-view-item-actions">
+                  <button class="game-action-btn fill">重试</button>
+                </div>
+              </template>
+              <template v-else>
                 <div class="game-view-item-content">
                   <div class="game-view-item-content-form remote-address-inputs">
                     <label class="game-view-item-content-form-label remote-host-input">
@@ -40,33 +97,6 @@
                   <button class="game-action-btn fill" @click="requestRemoteGame(Chess.Black)">申请执黑对局</button>
                   <button class="game-action-btn fill" @click="requestRemoteGame(Chess.White)">申请执白对局</button>
                 </div>
-              </template>
-              <template v-else>
-                <template v-if="store.state.remote.my_request.result === RemoteGameRequestResult.WAITING">
-                  <div class="game-view-item-content">
-                    等待对方接受申请...
-                  </div>
-                  <div class="game-view-item-actions">
-                    <button class="game-action-btn fill" @click="store.dispatch('leaveOnlineGame')">取消</button>
-                  </div>
-                </template>
-                <template v-else-if="store.state.remote.my_request.result === RemoteGameRequestResult.ACCEPTED">
-                  <div class="game-view-item-content">
-                    对方已接受申请，即将进入游戏
-                  </div>
-                </template>
-                <template v-else-if="store.state.remote.my_request.result === RemoteGameRequestResult.REJECTED">
-                  <div class="game-view-item-content">
-                    对方已拒绝申请
-                  </div>
-                  <div class="game-view-item-actions">
-                    <button class="game-action-btn fill"
-                      @click="store.dispatch('requestRemoteGame', { chessType: store.state.remote.my_request.chess })">再次申请</button>
-                    <button class="game-action-btn" v-if="store.state.remote.my_request.sendTo"
-                      @click="openChat(store.state.remote.my_request.sendTo)">聊天</button>
-                    <button class="game-action-btn" @click="store.dispatch('leaveOnlineGame')">断开连接</button>
-                  </div>
-                </template>
               </template>
             </div>
           </template>
@@ -111,10 +141,11 @@ import { useStore } from '@/store'
 import { ref, onMounted, watch, computed, nextTick, inject } from 'vue'
 import { useStringConfig } from '@/config'
 import { openChatListKey, openChatKey } from '@/keys'
+import ProgressCircular from '@/components/ProgressCircular.vue'
 import dayjs from 'dayjs'
 
 const { value: onlineUsername } = useStringConfig('onlineUsername')
-const { push, back } = useQuickRouter()
+const { back } = useQuickRouter()
 const ipAddresses = ref([] as string[])
 const realOnlinePort = ref(-1)
 const store = useStore()

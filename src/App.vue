@@ -121,6 +121,15 @@ const stopPlayBgm = () => {
   playBgm.value = false
 }
 
+const isValidUsername = (username: string) => {
+  return username && /^\w+$/g.test(username)
+}
+watch(() => store.state.config.onlineUsername, (newUsername) => {
+  if (isValidUsername(newUsername)) {
+    window.electronAPI.sendData(OpCode.UPDATE_USERNAME_OP, newUsername)
+  }
+}, { immediate: true })
+
 onMounted(() => {
   listenerId.value = window.electronAPI.onData((opCode, data1, data2) => {
     switch (opCode) {
@@ -145,6 +154,36 @@ onMounted(() => {
               message: data2
             })
           }
+        }
+        break
+      case OpCode.RECEIVE_REQUEST_OP: {
+        if (!data1 || !data2) break
+        const contestRequest = new RemoteGameRequest(data1, data2 === 'b' ? Chess.Black : Chess.White)
+        store.commit('receiveRequest', contestRequest)
+        console.log(route.name?.toString())
+        if (route.name !== 'startOnlineGame') {
+          Alert({
+            title: '收到对局申请',
+            content: `玩家 ${data1} 申请执${data2 === 'b' ? '黑' : '白'}棋与你进行对局，是否同意？\n${dayjs(contestRequest.timestamp).format('YYYY-MM-DD HH:mm:ss')}`,
+            positiveButtonText: '同意',
+            negativeButtonText: '拒绝',
+            onConfirm: () => {
+              store.dispatch('acceptRemoteRequest', contestRequest)
+            },
+            onClose: () => {
+              store.dispatch('rejectRemoteRequest', contestRequest)
+            }
+          })
+        }
+        if (route.name === 'gameOnline') {
+          router.replace('/')
+        }
+        break
+      }
+      case OpCode.RECEIVE_REQUEST_RESULT_OP:
+        if (!data1 || !data2) break
+        if (store.state.remote.is_connected && store.state.remote.my_request?.result === RemoteGameRequestResult.WAITING) {
+          store.commit('receiveRequestResult', { result: data1 === 'accepted' ? RemoteGameRequestResult.ACCEPTED : RemoteGameRequestResult.REJECTED, username: data2 })
         }
         break
       case OpCode.READY_OP:
@@ -208,7 +247,7 @@ onMounted(() => {
         break
       case OpCode.CHAT_RECEIVE_MESSAGE_OP:
         if (!data1 || !data2) break
-        if (chat.value?.currentChatTarget !== data2) {
+        if (chat.value?.currentChatTarget !== data2 && (route.name !== 'gameOnline' || store.state.uiState.game?.metadata.player_opposing.name !== data2)) {
           Alert({
             title: `${data2} 给你发来了一条消息`,
             content: data1,

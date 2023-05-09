@@ -83,6 +83,7 @@ export interface RemoteConnectState {
   failed_message?: string,
   remote_ip?: string,
   remote_port?: number,
+  connected_remote_username: string,
   my_request?: RemoteGameRequest | null,
   received_requests: Array<RemoteGameRequest>
 }

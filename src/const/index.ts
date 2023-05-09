@@ -50,7 +50,7 @@ export enum OpCode {
   GIVEUP_END_OP,
   LEAVE_OP,
   CHAT_OP,
-  // -----Extend OpCode ------------
+  // -------- Extend OpCode --------
   START_LOCAL_GAME_OP = 100000,
   UPDATE_UI_STATE_OP,
   // Deprecated
@@ -59,8 +59,17 @@ export enum OpCode {
   CONNECT_TO_REMOTE_OP,
   CONNECT_RESULT_OP,
   WIN_PENDING_OP,
+  // -------- Chat --------
   CHAT_SEND_MESSAGE_OP,
   CHAT_SEND_BROADCAST_MESSAGE_OP,
   CHAT_RECEIVE_MESSAGE_OP,
-  CHAT_USERNAME_UPDATE_OP
+  CHAT_USERNAME_UPDATE_OP,
+  // -------- Contest Request --------
+  UPDATE_USERNAME_OP,
+  SEND_REQUEST_OP,
+  RECEIVE_REQUEST_OP,
+  ACCEPT_REQUEST_OP,
+  REJECT_REQUEST_OP,
+  RECEIVE_REQUEST_RESULT_OP
+  // -------- Extend OpCode End --------
 }
