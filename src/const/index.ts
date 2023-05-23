@@ -67,6 +67,7 @@ export enum OpCode {
   // -------- Contest Request --------
   UPDATE_USERNAME_OP,
   SEND_REQUEST_OP,
+  SEND_REQUEST_BY_USERNAME_OP,
   RECEIVE_REQUEST_OP,
   ACCEPT_REQUEST_OP,
   REJECT_REQUEST_OP,

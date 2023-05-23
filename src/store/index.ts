@@ -155,7 +155,6 @@ export const store = createStore<GlobalState>({
     receiveRequest(state, payload: RemoteGameRequest) {
       state.remote.received_requests.push(payload)
       state.remote.received_requests = state.remote.received_requests.sort((a, b) => a.id - b.id)
-      state.remote.connected_remote_username = payload.username
       if (state.remote.my_request?.result === RemoteGameRequestResult.ACCEPTED) {
         state.remote.my_request = null
       }
@@ -168,6 +167,7 @@ export const store = createStore<GlobalState>({
     },
     acceptRemoteRequest(state, payload: RemoteGameRequest) {
       state.remote.is_connected = true
+      state.remote.connected_remote_username = payload.username
       state.remote.received_requests.forEach((request) => {
         if (request.id === payload.id) {
           request.result = RemoteGameRequestResult.ACCEPTED
@@ -289,7 +289,11 @@ export const store = createStore<GlobalState>({
     async requestRemoteGame({ commit, state }, payload: { chessType: Chess }) {
       if (state.remote.is_connected) {
         const chess = payload.chessType === Chess.Black ? 'b' : 'w'
-        await window.electronAPI.sendDataAsync(OpCode.SEND_REQUEST_OP, `${state.remote.remote_ip}:${state.remote.remote_port}`, chess)
+        if (state.remote.connected_remote_username) {
+          await window.electronAPI.sendDataAsync(OpCode.SEND_REQUEST_BY_USERNAME_OP, state.remote.connected_remote_username, chess)
+        } else {
+          await window.electronAPI.sendDataAsync(OpCode.SEND_REQUEST_OP, `${state.remote.remote_ip}:${state.remote.remote_port}`, chess)
+        }
         commit('requestRemoteGame', payload)
       }
     },
