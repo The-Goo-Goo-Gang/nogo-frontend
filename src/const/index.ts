@@ -30,7 +30,9 @@ export enum Chess {
 
 export enum LocalGameType {
   PVP = 0,
-  PVE
+  PVE,
+  EVP,
+  EVE
 }
 
 export enum RemoteGameRequestResult {
@@ -76,5 +78,7 @@ export enum OpCode {
   REPLAY_START_MOVE_OP,
   REPLAY_MOVE_OP,
   REPLAY_STOP_MOVE_OP,
+  // -------- Bot --------
+  BOT_HOSTING_OP,
   // -------- Extend OpCode End --------
 }

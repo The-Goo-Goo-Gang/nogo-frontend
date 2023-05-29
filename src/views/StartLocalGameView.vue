@@ -7,14 +7,20 @@
         <div class="game-view-item-content">
           <div class="game-view-item-content-form">
             <label class="game-view-item-content-form-label">
-              <input type="radio" name="gameType" :value="LocalGameType.PVP" v-model="gameType" />
+              <input type="radio" name="gameType" :value="LocalGameType.PVP" v-model.number="gameType" />
               PVP
             </label>
           </div>
           <div class="game-view-item-content-form">
             <label class="game-view-item-content-form-label">
-              <input type="radio" name="gameType" :value="LocalGameType.PVE" v-model="gameType" disabled />
-              PVE（在做了）
+              <input type="radio" name="gameType" :value="LocalGameType.PVE" v-model.number="gameType" />
+              PVE
+            </label>
+          </div>
+          <div class="game-view-item-content-form">
+            <label class="game-view-item-content-form-label">
+              <input type="radio" name="gameType" :value="LocalGameType.EVE" v-model.number="gameType" />
+              EVE
             </label>
           </div>
         </div>
@@ -53,7 +59,15 @@
           </div>
         </div>
       </div>
-      <button class="game-action-btn fill" @click="startLocalGame">开始游戏</button>
+      <div class="game-view-actions">
+        <template v-if="gameType === LocalGameType.PVE">
+          <button class="game-action-btn fill" @click="startLocalGame(LocalGameType.EVP)">开始游戏（机器先手）</button>
+          <button class="game-action-btn fill" @click="startLocalGame(LocalGameType.PVE)">开始游戏（人类先手）</button>
+        </template>
+        <template v-else>
+          <button class="game-action-btn fill" @click="startLocalGame()">开始游戏</button>
+        </template>
+      </div>
     </div>
   </div>
 </template>
@@ -71,11 +85,11 @@ const gameType = ref(LocalGameType.PVP)
 const boardSize: Ref<9 | 11 | 13> = ref(9)
 const thinkingTime = ref(30)
 
-const startLocalGame = () => {
+const startLocalGame = (type: LocalGameType = gameType.value) => {
   store.dispatch(
     'startLocalGame',
     {
-      type: gameType.value,
+      type,
       size: boardSize.value,
       timeout: thinkingTime.value
     }
@@ -83,3 +97,16 @@ const startLocalGame = () => {
   push('/game')
 }
 </script>
+
+<style scoped lang="scss">
+.game-view-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 8px;
+
+  .game-action-btn {
+    margin-top: 8px;
+  }
+}
+</style>
