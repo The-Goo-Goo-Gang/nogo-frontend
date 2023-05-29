@@ -245,7 +245,7 @@ onMounted(() => {
         }
         break
       case OpCode.LEAVE_OP:
-        if (store.state.remote.is_connected) {
+        if (store.state.remote.is_connected && store.state.remote.connected_username === data1) {
           Alert({ title: '对方已离开', content: '对方已离开游戏', timeout: 3000 })
           router.push('/')
         }
@@ -415,6 +415,16 @@ watch(() => hasAcceptedRequest.value && isGaming.value, isGaming => {
   background-repeat: no-repeat;
   background-size: cover;
   filter: blur(16px);
+}
+
+.icon-1p5x {
+  height: 1.5em !important;
+  width: 1.5em !important;
+
+  .material-design-icon__svg {
+    height: 1.5em !important;
+    width: 1.5em !important;
+  }
 }
 
 .icon-2x {
