@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { OpCode } from './const'
 import { NetworkData } from './network/data'
+import { SavedGame } from './state'
 
 const dataListeners: Array<(event: Electron.IpcRendererEvent, data: NetworkData) => void> = []
 
@@ -59,6 +60,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
       listener(path)
     })
   },
+  saveGame: (data: SavedGame) => {
+    ipcRenderer.send('saveGame', data)
+  },
+  getSavedGames: () => ipcRenderer.invoke('getSavedGames'),
+  deleteSavedGame: (id: string) => ipcRenderer.send('deleteSavedGame', id),
+  getSavedGame: (id: string) => ipcRenderer.invoke('getSavedGame', id),
   getLocalIpAddresses: () => ipcRenderer.invoke('net:getLocalIpAddresses'),
   getOnlinePort: () => ipcRenderer.invoke('net:getOnlinePort'),
   setOnlinePort: (port: number) => ipcRenderer.send('net:setOnlinePort', port),

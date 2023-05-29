@@ -34,7 +34,9 @@ export const store = createStore<GlobalState>({
         },
         statistics: [],
         start_time: 0,
-        end_time: 0
+        end_time: 0,
+        encoded: '',
+        is_replaying: false
       },
       game_result: {
         winner: Chess.None,
@@ -53,7 +55,7 @@ export const store = createStore<GlobalState>({
       is_connected: false,
       is_connecting: false,
       is_connecting_failed: false,
-      connected_remote_username: '',
+      connected_username: '',
       my_request: null,
       received_requests: []
     },

@@ -16,6 +16,7 @@ import { getPortPromise } from 'portfinder'
 import { getLocalIpAddresses } from './utils/net'
 import { getConfig, setConfig } from './config/config'
 import logger from 'electron-log'
+import { SavedGame } from './state'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -235,14 +236,58 @@ app.whenReady().then(async () => {
     })
     e.sender.send('setBgmFile', filePaths.map((filePath, index) => encodeURI(`nogo://background-music/${changeFileName(path.basename(filePath), `${index}`)}`)))
   })
-  ipcMain.on('sendData', (e, opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
+  ipcMain.on('sendData', (_, opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
     const data = JSON.stringify(new NetworkData(opCode, data1, data2)) + '\n'
     if (client) {
       log('sendData', data)
       client.write(data)
     }
   })
-  ipcMain.handle('net:sendData', (e, opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
+  ipcMain.on('saveGame', (_, data: SavedGame) => {
+    const saveFolder = path.join(app.getPath('userData'), 'Saved Games')
+    if (!fs.existsSync(saveFolder)) {
+      fs.mkdirSync(saveFolder)
+    }
+    const fileName = `${data.id}.json`
+    fs.writeFile(path.join(saveFolder, fileName), JSON.stringify(data), (err) => {
+      if (err) {
+        log('save game error', err)
+        return
+      }
+      log('save game success')
+    })
+  })
+  ipcMain.handle('getSavedGames', () => {
+    const saveFolder = path.join(app.getPath('userData'), 'Saved Games')
+    if (!fs.existsSync(saveFolder)) {
+      fs.mkdirSync(saveFolder)
+    }
+    const files = fs.readdirSync(saveFolder)
+    return files.map(file => JSON.parse(fs.readFileSync(path.join(saveFolder, file)).toLocaleString()))
+  })
+  ipcMain.on('deleteSavedGame', (_, id: string) => {
+    const saveFolder = path.join(app.getPath('userData'), 'Saved Games')
+    if (!fs.existsSync(saveFolder)) {
+      fs.mkdirSync(saveFolder)
+    }
+    const fileName = `${id}.json`
+    if (!fs.existsSync(path.join(saveFolder, fileName))) {
+      return
+    }
+    fs.unlinkSync(path.join(saveFolder, fileName))
+  })
+  ipcMain.handle('getSavedGame', (_, id: string) => {
+    const saveFolder = path.join(app.getPath('userData'), 'Saved Games')
+    if (!fs.existsSync(saveFolder)) {
+      fs.mkdirSync(saveFolder)
+    }
+    const fileName = `${id}.json`
+    if (!fs.existsSync(path.join(saveFolder, fileName))) {
+      return null
+    }
+    return JSON.parse(fs.readFileSync(path.join(saveFolder, fileName)).toLocaleString())
+  })
+  ipcMain.handle('net:sendData', (_, opCode: OpCode, data1: string | undefined, data2: string | undefined) => {
     const data = JSON.stringify(new NetworkData(opCode, data1, data2)) + '\n'
     if (client) {
       log('sendData', data)

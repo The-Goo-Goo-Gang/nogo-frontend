@@ -34,7 +34,9 @@ export interface GameState {
   metadata: GameMetadata,
   statistics: Array<DynamicStatistics>,
   start_time: number,
-  end_time: number
+  end_time: number,
+  encoded: string,
+  is_replaying: boolean
 }
 
 export interface TimerState {
@@ -85,7 +87,7 @@ export interface RemoteConnectState {
   failed_message?: string,
   remote_ip?: string,
   remote_port?: number,
-  connected_remote_username: string,
+  connected_username: string,
   my_request?: RemoteGameRequest | null,
   received_requests: Array<RemoteGameRequest>
 }
@@ -94,4 +96,11 @@ export interface ChatMessage {
   sender: string,
   content: string,
   timestamp: number
+}
+
+export interface SavedGame {
+  id: string,
+  name: string,
+  timestamp: number,
+  encoded: string,
 }

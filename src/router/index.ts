@@ -3,7 +3,10 @@ import HomeView from '../views/HomeView.vue'
 import LocalGameView from '../views/LocalGameView.vue'
 import OnlineGameView from '../views/OnlineGameView.vue'
 import StartLocalGameView from '../views/StartLocalGameView.vue'
+import StartOnlineGameView from '../views/StartOnlineGameView.vue'
 import SettingsView from '../views/SettingsView.vue'
+import ReplayView from '../views/ReplayView.vue'
+import SavedGameView from '../views/SavedGameView.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -29,12 +32,22 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/start/online',
     name: 'startOnlineGame',
-    component: () => import(/* webpackChunkName: "startOnlineGame" */ '../views/StartOnlineGameView.vue')
+    component: StartOnlineGameView
   },
   {
     path: '/settings',
     name: 'settings',
     component: SettingsView
+  },
+  {
+    path: '/replay',
+    name: 'savedGame',
+    component: SavedGameView
+  },
+  {
+    path: '/replay/game/:id',
+    name: 'replay',
+    component: ReplayView
   },
   {
     path: '/about',

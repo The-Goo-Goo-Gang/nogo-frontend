@@ -1,7 +1,7 @@
 <template>
   <div>
     <canvas ref="canvas" class="game-chessboard-canvas" id="chessboardCanvas" :width="width" :height="height"
-      :style="canvasStyle" @click="canvasClicked" @pointermove="onPointerMove">
+      :style="canvasStyle" @click="canvasClicked" @pointermove="onPointerMove" @pointerleave="onPointerLeave">
     </canvas>
   </div>
   <Teleport to="body">
@@ -21,27 +21,29 @@ const props = withDefaults(defineProps<{
   height: number,
   chesses: Chess[][],
   size: number,
+  onlyRead: boolean,
   disabledPositions?: Position[],
   highlightPositions?: Position[]
 }>(), {
-  size: 9
+  size: 9,
+  onlyRead: false
 })
 
 const emit = defineEmits(['chess-clicked'])
 
 const canvas = ref<HTMLCanvasElement | null>(null)
-const rowSpace = computed(() => Math.floor((props.height - LINE_WIDTH * props.size) / (props.size)))
-const columnSpace = computed(() => Math.floor((props.width - LINE_WIDTH * props.size) / (props.size)))
+const rowSize = computed(() => Math.floor(props.height / props.size))
+const columnSize = computed(() => Math.floor(props.width / props.size))
+const rowSpace = computed(() => rowSize.value - LINE_WIDTH)
+const columnSpace = computed(() => columnSize.value - LINE_WIDTH)
 const drawWidth = computed(() => columnSpace.value * (props.size - 1) + LINE_WIDTH * props.size)
 const drawHeight = computed(() => rowSpace.value * (props.size - 1) + LINE_WIDTH * props.size)
 const boardWidth = computed(() => columnSpace.value * props.size + LINE_WIDTH * props.size)
 const boardHeight = computed(() => rowSpace.value * props.size + LINE_WIDTH * props.size)
 const widthDiff = computed(() => props.width - boardWidth.value)
 const heightDiff = computed(() => props.height - boardHeight.value)
-const rowPadding = computed(() => rowSpace.value / 2 + widthDiff.value / 2)
-const columnPadding = computed(() => columnSpace.value / 2 + heightDiff.value / 2)
-const rowSize = computed(() => LINE_WIDTH + rowSpace.value)
-const columnSize = computed(() => LINE_WIDTH + columnSpace.value)
+const rowPadding = computed(() => (props.height - drawHeight.value) / 2)
+const columnPadding = computed(() => (props.width - drawWidth.value) / 2)
 
 const chesses = computed(() => props.chesses)
 const disabledPositions = computed(() => props.disabledPositions || [])
@@ -91,11 +93,21 @@ const hoverChessX = ref(-1)
 const hoverChessY = ref(-1)
 
 const onPointerMove = (e: PointerEvent) => {
+  if (props.onlyRead) {
+    return
+  }
   const { x, y } = calcChessPosition(e.offsetX, e.offsetY)
   hoverX.value = e.clientX
   hoverY.value = e.clientY
   hoverChessX.value = x
   hoverChessY.value = y
+}
+
+const onPointerLeave = () => {
+  hoverX.value = -1
+  hoverY.value = -1
+  hoverChessX.value = -1
+  hoverChessY.value = -1
 }
 
 const isPositionDisabled = (x: number, y: number) => {
@@ -119,6 +131,7 @@ const canvasStyle = computed(() => {
 })
 const tipStyle = computed(() => {
   return {
+    display: hoverX.value < 0 || hoverY.value < 0 ? 'none' : 'block',
     left: `${hoverX.value}px`,
     top: `${hoverY.value}px`
   }
@@ -132,14 +145,14 @@ function drawChessboard() {
       ctx.lineWidth = LINE_WIDTH
       ctx.strokeStyle = '#000000'
       for (let i = 0; i < props.size; i++) {
-        const y = columnPadding.value + LINE_WIDTH / 2 + i * (rowSpace.value + LINE_WIDTH)
+        const y = columnPadding.value + LINE_WIDTH / 2 + i * rowSize.value
         ctx.beginPath()
         ctx.moveTo(rowPadding.value, y)
         ctx.lineTo(rowPadding.value + drawWidth.value, y)
         ctx.stroke()
       }
       for (let i = 0; i < props.size; i++) {
-        const x = rowPadding.value + LINE_WIDTH / 2 + i * (columnSpace.value + LINE_WIDTH)
+        const x = rowPadding.value + LINE_WIDTH / 2 + i * columnSize.value
         ctx.beginPath()
         ctx.moveTo(x, columnPadding.value)
         ctx.lineTo(x, columnPadding.value + drawHeight.value)
@@ -151,8 +164,8 @@ function drawChessboard() {
 }
 
 const drawCursor = (ctx: CanvasRenderingContext2D, x: number, y: number, color = 'rgba(0, 0, 0, 0.5)') => {
-  const centerX = widthDiff.value + columnSize.value * y + columnSize.value / 2 - LINE_WIDTH / 2
-  const centerY = heightDiff.value + rowSize.value * x + rowSize.value / 2 - LINE_WIDTH / 2
+  const centerX = rowPadding.value + LINE_WIDTH / 2 + y * rowSize.value
+  const centerY = columnPadding.value + LINE_WIDTH / 2 + x * columnSize.value
   ctx.lineWidth = LINE_WIDTH * 0.5
   ctx.strokeStyle = color
   ctx.beginPath()
@@ -172,15 +185,14 @@ const drawCursor = (ctx: CanvasRenderingContext2D, x: number, y: number, color =
 
 function drawChesses() {
   if (canvas.value != null) {
-    console.log('drawChesses', chesses.value)
     const ctx = canvas.value.getContext('2d')
     if (ctx != null) {
       ctx.lineWidth = LINE_WIDTH
       chesses.value.forEach((row, rowIndex) => {
         row.forEach((column, columnIndex) => {
-          const centerX = widthDiff.value + columnSize.value * columnIndex + columnSize.value / 2 - LINE_WIDTH / 2
-          const centerY = heightDiff.value + rowSize.value * rowIndex + rowSize.value / 2 - LINE_WIDTH / 2
-          if (hoverChessX.value === rowIndex && hoverChessY.value === columnIndex) {
+          const centerX = columnPadding.value + LINE_WIDTH / 2 + columnIndex * columnSize.value
+          const centerY = rowPadding.value + LINE_WIDTH / 2 + rowIndex * rowSize.value
+          if (hoverChessX.value === rowIndex && hoverChessY.value === columnIndex && !props.onlyRead) {
             if (isPositionDisabled(rowIndex, columnIndex)) {
               drawCursor(ctx, rowIndex, columnIndex, 'rgba(255, 0, 0, 0.5)')
             } else {

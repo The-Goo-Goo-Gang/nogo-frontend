@@ -57,12 +57,11 @@
                 </template>
                 <template v-else>
                   <div class="game-view-item-content">
-                    已连接到 {{ store.state.remote.connected_remote_username }}
+                    已连接到 {{ store.state.remote.connected_username }}
                   </div>
                   <div class="game-view-item-actions">
                     <button class="game-action-btn fill" @click="store.dispatch('leaveOnlineGame')">断开连接</button>
-                    <button class="game-action-btn"
-                      @click="openChat(store.state.remote.connected_remote_username)">聊天</button>
+                    <button class="game-action-btn" @click="openChat(store.state.remote.connected_username)">聊天</button>
                   </div>
                 </template>
               </template>
@@ -235,7 +234,6 @@ watch(remotePort, port => {
 </script>
 
 <style lang="scss" scoped>
-.game-view-item-actions,
 .remote-waiting-request-actions {
   display: flex;
   flex-direction: row-reverse;

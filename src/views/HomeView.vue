@@ -4,6 +4,7 @@
     <div class="game-actions">
       <button class="game-action-btn" @click="startLocalGame">单人游戏</button>
       <button class="game-action-btn" @click="startOnlineGame">多人游戏</button>
+      <button class="game-action-btn" @click="replayGame">对局回放</button>
       <button class="game-action-btn" @click="goToSettings">设置</button>
       <button class="game-action-btn" @click="exit">退出</button>
     </div>
@@ -29,5 +30,9 @@ const startOnlineGame = () => {
 
 const goToSettings = () => {
   router.push('/settings')
+}
+
+const replayGame = () => {
+  router.push('/replay')
 }
 </script>
