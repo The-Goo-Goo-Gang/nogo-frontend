@@ -1,25 +1,25 @@
 <template>
-  <div class="game-container game-grid game-ongoing" v-if="store.state.uiState.status != GameStatus.NOT_PREPARED">
+  <div class="game-container grid game-ongoing" v-if="store.state.uiState.status != GameStatus.NOT_PREPARED">
     <div class="game-left-container left">
       <div class="player-container">
-        <PlayerIndicator
-          :player="store.state.uiState.game?.metadata.player_opposing || { name: 'Player B', type: PlayerType.LocalHumanPlayer, chess_type: Chess.White }"
-          :is-playing="!isOurPlayerPlaying" />
+        <PlayerIndicator v-if="store.state.uiState.game?.metadata.player_opposing"
+          :player="store.state.uiState.game?.metadata.player_opposing" :is-playing="!isOurPlayerPlaying" />
         <div class="timer" :style="{ opacity: (shouldStartTimer && timerRunning && !isOurPlayerPlaying) ? 1 : 0 }">
           <ProgressBar :progress="timerProgress" />
         </div>
       </div>
       <div class="game-chessboard">
         <GameChessboard :width="400" :height="400" :chesses="chessboard" :disabled-positions="disabledPositions"
-          :highlight-positions="highlightPositions" @chess-clicked="onChessClicked"></GameChessboard>
+          :size="chessboardSize" :highlight-positions="highlightPositions" @chess-clicked="onChessClicked">
+        </GameChessboard>
       </div>
       <div class="player-container">
         <div class="timer" :style="{ opacity: shouldStartTimer && timerRunning && isOurPlayerPlaying ? 1 : 0 }">
           <ProgressBar :progress="timerProgress" />
         </div>
-        <PlayerIndicator
-          :player="store.state.uiState.game?.metadata.player_our || { name: 'Player A', type: PlayerType.LocalHumanPlayer, chess_type: Chess.Black }"
-          :is-playing="isOurPlayerPlaying" :show-timer="isOurPlayerPlaying" :reverse="true" />
+        <PlayerIndicator v-if="store.state.uiState.game?.metadata.player_our"
+          :player="store.state.uiState.game?.metadata.player_our" :is-playing="isOurPlayerPlaying"
+          :show-timer="isOurPlayerPlaying" :reverse="true" />
       </div>
     </div>
     <div class="game-right-container right">
@@ -33,7 +33,8 @@
           <div class="game-stat-item-value">{{ store.state.uiState.game?.move_count }}</div>
         </div>
       </div>
-      <div class="game-actions">
+      <div class="game-right-actions">
+        <button class="game-action-btn fill" @click="toggleBotHost">{{ isBotHosting ? '取消托管' : '托管' }}</button>
         <button class="game-action-btn fill give-up-btn" @click="giveUp" :disabled="!isOurPlayerPlaying">认输</button>
       </div>
       <div class="game-chat-container">
@@ -51,6 +52,7 @@
       <p>步数：{{ store.state.uiState.game?.move_count }}</p>
       <div class="game-actions">
         <button class="game-action-btn" @click="showRestartDialog = true">再来一局</button>
+        <button class="game-action-btn" @click="saveGame">保存对局</button>
         <button class="game-action-btn" @click="exitOnlineGame">退出游戏</button>
       </div>
     </div>
@@ -71,10 +73,13 @@ import GameChessboard from '@/components/GameChessboard.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
 import ChatView from '@/components/ChatView.vue'
 import { useStore } from '@/store'
-import { Chess, GameStatus, OpCode, PlayerType, WinType } from '@/const'
-import { computed, watch, onMounted, ref, inject } from 'vue'
+import { Chess, GameStatus, OpCode, PlayerType } from '@/const'
+import { computed, ref, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { nowTimestampKey } from '@/keys'
+import { Alert } from '@/components/alert/alert'
+import dayjs from 'dayjs'
+import { useGameChessboard, useGameResult, useGameTimer } from './gameView'
 
 const showRestartDialog = ref(false)
 const chat = ref<InstanceType<typeof ChatView> | null>(null)
@@ -101,181 +106,64 @@ const exitOnlineGame = () => {
   router.replace('/')
 }
 
-const giveUp = () => {
-  if (store.state.uiState.game != null && store.state.uiState.status === GameStatus.ON_GOING && isOurPlayerPlaying.value) {
-    const chess = store.state.uiState.game.now_playing === store.state.uiState.game.metadata.player_our.chess_type ? store.state.uiState.game.metadata.player_our.chess_type : store.state.uiState.game.metadata.player_opposing.chess_type
-    const role = chess === Chess.Black ? 'b' : 'w'
-    window.electronAPI.sendData(OpCode.GIVEUP_OP, role)
+const saveGame = () => {
+  if (store.state.uiState.game != null) {
+    window.electronAPI.saveGame({
+      id: `online-${store.state.uiState.game.end_time}`,
+      name: `${store.state.uiState.game.metadata.player_our.name} VS ${store.state.uiState.game.metadata.player_opposing.name}`,
+      timestamp: store.state.uiState.game.end_time,
+      encoded: store.state.uiState.game.encoded.trim()
+    })
+    Alert({
+      title: '保存成功',
+      content: '对局已保存到本地',
+      timeout: 3000
+    })
   }
 }
 
-const timeout = computed(() => store.state.uiState.game?.metadata.timeout || 30)
-const timerRunning = computed(() => store.state.timer.running)
-const timerProgress = computed(() => 100 - store.getters.timerProgress)
-const shouldStartTimer = computed(() => store.state.uiState.status === GameStatus.ON_GOING && store.state.uiState.game?.move_count)
+const isBotHosting = computed(() => store.state.uiState.game?.metadata.player_our.type === PlayerType.BotPlayer)
+const toggleBotHost = () => {
+  if (!store.state.uiState.game) return
+  window.electronAPI.sendData(OpCode.BOT_HOSTING_OP)
+}
+const giveUp = () => {
+  if (store.state.uiState.game != null && store.state.uiState.status === GameStatus.ON_GOING && isOurPlayerPlaying.value) {
+    window.electronAPI.sendData(OpCode.GIVEUP_OP, store.state.config.onlineUsername)
+  }
+}
 
-const chessboard = computed(() => store.getters.chessboard)
-const disabledPositions = computed(() => store.state.uiState.game?.disabled_positions || [])
-const highlightPositions = computed(() => store.state.uiState.game?.last_move ? [store.state.uiState.game.last_move] : [])
 const nowPlayer = computed(() => {
   if (!store.state.uiState.game) return null
   return store.state.uiState.game.now_playing === store.state.uiState.game.metadata.player_our.chess_type ? store.state.uiState.game.metadata.player_our : store.state.uiState.game.metadata.player_opposing
 })
 const isOurPlayerPlaying = computed(() => store.state.uiState.game?.now_playing === store.state.uiState.game?.metadata.player_our.chess_type)
 
-const showGameResult = computed(() => store.state.uiState.status === GameStatus.GAME_OVER && store.state.uiState.game_result.winner !== Chess.None)
-const winnerName = computed(() => {
-  if (store.state.uiState.game == null) return ''
-  const winner = store.state.uiState.game_result.winner
-  if (winner === Chess.None) return ''
-  const winnerChessText = winner === Chess.Black ? '黑方' : '白方'
-  const winnerPlayer = winner === store.state.uiState.game.metadata.player_our.chess_type ? store.state.uiState.game.metadata.player_our : store.state.uiState.game.metadata.player_opposing
-  return `${winnerChessText}（${winnerPlayer.name}）`
-})
-const loserName = computed(() => {
-  const loser = -store.state.uiState.game_result.winner
-  if (loser === Chess.Black) {
-    return '黑方'
-  } else if (loser === Chess.White) {
-    return '白方'
-  } else {
-    return ''
-  }
-})
-const winReasonText = computed(() => {
-  const reason = store.state.uiState.game_result.win_type
-  if (reason === WinType.GIVEUP) {
-    return `${loserName.value}认输`
-  } else if (reason === WinType.TIMEOUT) {
-    return `${loserName.value}超时`
-  } else if (reason === WinType.SUICIDE) {
-    return `${loserName.value}吃掉了${winnerName.value}的棋子`
-  } else {
-    return ''
-  }
-})
+const {
+  timerRunning,
+  timerProgress,
+  shouldStartTimer
+} = useGameTimer(nowPlayer)
+
+const {
+  chessboard,
+  chessboardSize,
+  disabledPositions,
+  highlightPositions
+} = useGameChessboard()
+
+const {
+  showGameResult,
+  winnerName,
+  winReasonText
+} = useGameResult()
+
 const gameUsedTimeText = computed(() => {
   if (!store.state.uiState.game || store.state.uiState.status === GameStatus.NOT_PREPARED) return ''
-  let seconds = Math.floor(((store.state.uiState.status === GameStatus.GAME_OVER ? store.state.uiState.game.end_time : nowTimestamp.value) - store.state.uiState.game.start_time) / 1000)
-  let minutes = Math.floor(seconds / 60)
-  seconds = seconds % 60
-  if (!minutes) return `${seconds} 秒`
-  const hours = Math.floor(minutes / 60)
-  minutes = minutes % 60
-  if (!hours) return `${minutes} 分钟 ${seconds} 秒`
-  return `${hours} 时 ${minutes} 分钟 ${seconds} 秒`
-})
-
-watch(nowPlayer, () => {
-  if (shouldStartTimer.value) {
-    store.dispatch('startTimer', { duration: timeout.value })
-  }
-})
-
-onMounted(() => {
-  if (nowPlayer.value != null && shouldStartTimer.value) store.dispatch('startTimer', { duration: timeout.value })
+  const milliseconds = Math.max(
+    0,
+    ((store.state.uiState.status === GameStatus.GAME_OVER ? store.state.uiState.game.end_time : nowTimestamp.value) - store.state.uiState.game.start_time)
+  )
+  return dayjs.duration(milliseconds).format('HH:mm:ss')
 })
 </script>
-
-<style scoped lang="scss">
-.timer {
-  transition: opacity ease-in-out .3s;
-  padding: 0px 16px;
-}
-
-.game-ongoing {
-  z-index: 1;
-  align-items: stretch;
-}
-
-.game-result {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(16px);
-
-  &.show {
-    z-index: 999;
-    opacity: 1;
-    backdrop-filter: blur(16px);
-  }
-
-  &.hide {
-    z-index: 0;
-    opacity: 0;
-    backdrop-filter: blur(0px);
-  }
-
-  .game-result-content {
-    padding: 32px;
-    background: rgba($color: #FFFFFF, $alpha: 0.5);
-    border-radius: 16px;
-    display: inline;
-    text-align: center;
-  }
-}
-
-.player-container {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.game-chessboard {
-  padding: 16px;
-  background: rgba($color: #FFFFFF, $alpha: 0.5);
-  border-radius: 16px;
-  backdrop-filter: blur(0px);
-  display: inline-block;
-}
-
-.game-chat {
-  height: 45vh;
-}
-
-.right {
-  align-items: stretch;
-}
-
-.give-up-btn {
-  border-radius: 16px;
-}
-
-.game-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-gap: 8px 16px;
-  padding: 16px;
-  background: rgba($color: #FFFFFF, $alpha: 0.5);
-  border-radius: 16px;
-  backdrop-filter: blur(0px);
-
-  .game-stat-item {
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-    align-items: center;
-    justify-content: space-between;
-    flex: 0 0 50%;
-  }
-
-  .game-stat-item-title {
-    font-size: 14px;
-    font-weight: bold;
-    color: #000000;
-  }
-
-  .game-stat-item-value {
-    font-size: 14px;
-    color: #000000;
-  }
-}
-</style>

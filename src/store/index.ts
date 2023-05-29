@@ -30,7 +30,7 @@ export const store = createStore<GlobalState>({
             type: PlayerType.LocalHumanPlayer,
             chess_type: Chess.Black
           },
-          timeout: 60
+          turn_timeout: 60
         },
         statistics: [],
         start_time: 0,

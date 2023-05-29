@@ -16,7 +16,7 @@ export interface GameMetadata {
   size: 9 | 11 | 13,
   player_opposing: Player,
   player_our: Player,
-  timeout: number
+  turn_timeout: number
 }
 
 export interface DynamicStatistics {

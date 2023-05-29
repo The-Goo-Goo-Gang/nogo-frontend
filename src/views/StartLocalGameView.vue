@@ -24,20 +24,20 @@
         <div class="game-view-item-content">
           <div class="game-view-item-content-form">
             <label class="game-view-item-content-form-label">
-              <input type="radio" name="boardSize" :value="9" v-model="boardSize" />
+              <input type="radio" name="boardSize" :value="9" v-model.number="boardSize" />
               9⨉9
             </label>
           </div>
           <div class="game-view-item-content-form">
             <label class="game-view-item-content-form-label">
-              <input type="radio" name="boardSize" :value="11" v-model="boardSize" disabled />
-              11⨉11（在做了）
+              <input type="radio" name="boardSize" :value="11" v-model.number="boardSize" />
+              11⨉11
             </label>
           </div>
           <div class="game-view-item-content-form">
             <label class="game-view-item-content-form-label">
-              <input type="radio" name="boardSize" :value="13" v-model="boardSize" disabled />
-              13⨉13（在做了）
+              <input type="radio" name="boardSize" :value="13" v-model.number="boardSize" />
+              13⨉13
             </label>
           </div>
         </div>
@@ -47,7 +47,7 @@
         <div class="game-view-item-content full-width">
           <div class="game-view-item-content-form">
             <label class="game-view-item-content-form-label">
-              <input type="range" :min="10" :max="120" v-model="thinkingTime" />
+              <input type="range" :min="3" :max="120" v-model="thinkingTime" />
               {{ thinkingTime }} 秒
             </label>
           </div>

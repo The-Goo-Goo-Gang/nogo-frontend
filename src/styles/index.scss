@@ -38,12 +38,12 @@
 
     &:hover {
       color: white;
-      background-color: rgba($color: $theme-color, $alpha: 0.75)!important;
+      background-color: rgba($color: $theme-color, $alpha: 0.75) !important;
     }
 
     &:active {
       color: white;
-      background-color: $theme-color!important;
+      background-color: $theme-color !important;
     }
   }
 
@@ -57,11 +57,11 @@
   }
 }
 
-.game-view-item-title + .game-view-item-content {
+.game-view-item-title+.game-view-item-content {
   margin-top: 0.5rem;
 }
 
-.game-view-item + .game-view-item {
+.game-view-item+.game-view-item {
   margin-top: 1rem;
 }
 
@@ -81,7 +81,7 @@
 
   input[type='range'] {
     //宽度
-    -webkit-appearance: none;
+    appearance: none;
     height: 0.5rem;
     background: #d3d3d3;
     outline: none;
@@ -91,7 +91,6 @@
 
     //滑块样式（蓝色）
     &::-webkit-slider-thumb {
-      -webkit-appearance: none;
       appearance: none;
       width: 1rem;
       height: 1rem;
@@ -211,10 +210,20 @@
         align-items: stretch;
         align-content: stretch;
 
-        input { flex: 1; }
+        input {
+          flex: 1;
+        }
       }
     }
   }
+}
+
+.game-view-item-actions {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  margin-top: 10px;
+  gap: 10px;
 }
 
 .game-view-form {
@@ -256,12 +265,157 @@
   // flex: 1;
 }
 
-.game-grid {
+.game-grid,
+.grid {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  align-content: center;
   padding: 0em;
   gap: 16px;
+}
+
+.timer {
+  transition: opacity ease-in-out .3s;
+  padding: 0px 16px;
+}
+
+.game-ongoing {
+  z-index: 1;
+}
+
+.game-result {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(16px);
+
+  &.show {
+    z-index: 999;
+    opacity: 1;
+    backdrop-filter: blur(16px);
+  }
+
+  &.hide {
+    z-index: 0;
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+
+  .game-result-content {
+    padding: 32px;
+    background: rgba($color: #FFFFFF, $alpha: 0.5);
+    border-radius: 16px;
+    display: inline;
+    text-align: center;
+  }
+}
+
+.player-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.game-chessboard {
+  padding: 16px;
+  background: rgba($color: #FFFFFF, $alpha: 0.5);
+  border-radius: 16px;
+  backdrop-filter: blur(0px);
+  display: inline-block;
+}
+
+.give-up-btn {
+  border-radius: 16px;
+}
+
+.game-chat {
+  height: 45vh;
+}
+
+.game-left-container {
+  padding: 16px;
+  justify-content: space-between;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.game-right-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  align-content: stretch;
+  align-items: stretch;
+}
+
+.game-container {
+  height: 94%;
+  width: 96%;
+  max-width: 1280px;
+
+  @media (min-width: 600px) {
+    height: 92%;
+    width: 94%;
+  }
+
+  @media (min-width: 1024px) {
+    height: 90%;
+    width: 92%;
+  }
+}
+
+.game-right-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  align-items: stretch;
+  align-self: stretch;
+  gap: 16px;
+
+  .game-action-btn {
+    border-radius: 16px;
+  }
+}
+
+.game-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 8px 16px;
+  padding: 16px;
+  background: rgba($color: #FFFFFF, $alpha: 0.5);
+  border-radius: 16px;
+  backdrop-filter: blur(0px);
+  width: calc(100% - 32px);
+
+  .game-stat-item {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    align-items: center;
+    justify-content: space-between;
+    flex: 0 0 50%;
+  }
+
+  .game-stat-item-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #000000;
+  }
+
+  .game-stat-item-value {
+    font-size: 14px;
+    color: #000000;
+  }
 }
