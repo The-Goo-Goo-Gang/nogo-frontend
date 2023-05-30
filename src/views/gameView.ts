@@ -1,5 +1,5 @@
 import { Chess, GameStatus, WinType } from '@/const'
-import { Player } from '@/state'
+import { Player } from '@/types'
 import { useStore } from '@/store'
 import { Ref, computed, onMounted, watch } from 'vue'
 

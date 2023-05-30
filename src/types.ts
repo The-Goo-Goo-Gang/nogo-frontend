@@ -36,7 +36,8 @@ export interface GameState {
   start_time: number,
   end_time: number,
   encoded: string,
-  is_replaying: boolean
+  is_replaying: boolean,
+  should_giveup: boolean
 }
 
 export interface TimerState {

@@ -1,5 +1,5 @@
 import { NoGoConfig } from '@/config'
-import { UiState, TimerState, RemoteConnectState, ChatMessage } from '@/state'
+import { UiState, TimerState, RemoteConnectState, ChatMessage } from '@/types'
 
 export interface GlobalState {
   uiState: UiState,

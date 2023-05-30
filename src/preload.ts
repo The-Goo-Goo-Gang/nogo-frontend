@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { OpCode } from './const'
 import { NetworkData } from './network/data'
-import { SavedGame } from './state'
+import { SavedGame } from './types'
 
 const dataListeners: Array<(event: Electron.IpcRendererEvent, data: NetworkData) => void> = []
 

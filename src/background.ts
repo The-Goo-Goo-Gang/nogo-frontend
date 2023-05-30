@@ -16,7 +16,7 @@ import { getPortPromise } from 'portfinder'
 import { getLocalIpAddresses } from './utils/net'
 import { getConfig, setConfig } from './config/config'
 import logger from 'electron-log'
-import { SavedGame } from './state'
+import { SavedGame } from './types'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 

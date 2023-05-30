@@ -1,5 +1,5 @@
 import { OpCode } from '@/const'
-import { SavedGame } from '@/state'
+import { SavedGame } from '@/types'
 
 declare interface ElectronAPI {
   onData: (listener: (opCode: OpCode, data1: string | undefined, data2: string | undefined) => void) => number,

@@ -2,7 +2,7 @@ import { createStore, Store, useStore as baseUseStore } from 'vuex'
 import { GlobalState } from './type'
 import { InjectionKey, reactive } from 'vue'
 import { Chess, GameStatus, LocalGameType, OpCode, PlayerType, RemoteGameRequestResult, WinType } from '@/const'
-import { ChatMessage, UiState, RemoteGameRequest } from '@/state'
+import { ChatMessage, UiState, RemoteGameRequest } from '@/types'
 import { DEFAULT_CONFIG, getConfigFromLocalStorage, NoGoConfig, NoGoConfigDiff } from '@/config'
 
 export const key: InjectionKey<Store<GlobalState>> = Symbol('globalState')
@@ -36,7 +36,8 @@ export const store = createStore<GlobalState>({
         start_time: 0,
         end_time: 0,
         encoded: '',
-        is_replaying: false
+        is_replaying: false,
+        should_giveup: false
       },
       game_result: {
         winner: Chess.None,
