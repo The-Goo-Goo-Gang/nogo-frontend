@@ -33,6 +33,7 @@
           <div class="game-stat-item-value">{{ store.state.uiState.game?.move_count }}</div>
         </div>
       </div>
+      <div class="game-giveup-tip" v-if="store.state.uiState.game?.should_giveup">无棋可下了！考虑认输？</div>
       <div class="game-right-actions">
         <button class="game-action-btn fill" @click="toggleBotHost">{{ isBotHosting ? '取消托管' : '托管' }}</button>
         <button class="game-action-btn fill give-up-btn" @click="giveUp" :disabled="!isOurPlayerPlaying">认输</button>
