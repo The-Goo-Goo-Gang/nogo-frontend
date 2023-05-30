@@ -12,6 +12,8 @@
         <NetworkIcon class="player-indicator-type-icon" v-else-if="player.type == PlayerType.OnlineHumanPlayer" />
         <RobotIcon class="player-indicator-type-icon" v-else-if="player.type == PlayerType.BotPlayer" />
         <span>{{ player.name }}</span>
+        <Vue3Lottie class="player-indicator-hourglass" :animation-data="HourglassAnimJSON" height="1.5em" width="1.5em"
+          v-if="isPlaying" style="opacity: 0;" />
       </div>
       <div class="player-indicator-chess-icon" :role="player.chess_type == Chess.Black ? 'black' : 'white'"></div>
     </div>
@@ -23,7 +25,7 @@ import AccountCircleIcon from 'vue-material-design-icons/AccountCircle.vue'
 import AccountIcon from 'vue-material-design-icons/Account.vue'
 import NetworkIcon from 'vue-material-design-icons/Network.vue'
 import RobotIcon from 'vue-material-design-icons/Robot.vue'
-import { Player } from '@/state'
+import { Player } from '@/types'
 import { Chess, PlayerType } from '@/const'
 import HourglassAnimJSON from '@/assets/Hourglass_2.json'
 import { Vue3Lottie } from 'vue3-lottie'
