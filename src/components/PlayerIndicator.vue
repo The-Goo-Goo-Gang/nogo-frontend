@@ -7,13 +7,13 @@
       </div>
       <div class="player-indicator-class">
         <Vue3Lottie class="player-indicator-hourglass" :animation-data="HourglassAnimJSON" height="1.5em" width="1.5em"
-          v-if="isPlaying" />
+          v-show="isPlaying" />
         <AccountIcon class="player-indicator-type-icon" v-if="player.type == PlayerType.LocalHumanPlayer" />
         <NetworkIcon class="player-indicator-type-icon" v-else-if="player.type == PlayerType.OnlineHumanPlayer" />
         <RobotIcon class="player-indicator-type-icon" v-else-if="player.type == PlayerType.BotPlayer" />
         <span>{{ player.name }}</span>
         <Vue3Lottie class="player-indicator-hourglass" :animation-data="HourglassAnimJSON" height="1.5em" width="1.5em"
-          v-if="isPlaying" style="opacity: 0;" />
+          v-show="isPlaying" style="opacity: 0;" />
       </div>
       <div class="player-indicator-chess-icon" :role="player.chess_type == Chess.Black ? 'black' : 'white'"></div>
     </div>
