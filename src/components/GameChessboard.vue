@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import { withDefaults, onMounted, ref, computed, watch } from 'vue'
 import { Chess } from '@/const'
-import { Position } from '@/state'
+import { Position } from '@/types'
 
 const LINE_WIDTH = 4
 

@@ -7,7 +7,8 @@
       </div>
       <div class="game-chessboard">
         <GameChessboard :width="400" :height="400" :chesses="chessboard" :disabled-positions="disabledPositions"
-          :highlight-positions="highlightPositions" @chess-clicked="onChessClicked" :size="9" :only-read="!isReplaying">
+          :highlight-positions="highlightPositions" @chess-clicked="onChessClicked" :size="replayChessboardSize"
+          :only-read="!isReplaying">
         </GameChessboard>
       </div>
       <div class="player-container">
@@ -78,7 +79,7 @@ import PreviousIcon from 'vue-material-design-icons/ChevronLeft.vue'
 import NextIcon from 'vue-material-design-icons/ChevronRight.vue'
 import PlayerIndicator from '@/components/PlayerIndicator.vue'
 import GameChessboard from '@/components/GameChessboard.vue'
-import { Player } from '@/state'
+import { Player } from '@/types'
 import { Chess, GameStatus, OpCode, PlayerType, WinType } from '@/const'
 import { positionToString, stringToPosition } from '@/utils/nogo'
 import { useRoute, useRouter } from 'vue-router'
@@ -88,6 +89,7 @@ const store = useStore()
 const route = useRoute()
 const router = useRouter()
 const playSpeed: Ref<1 | 2 | 3> = ref(1)
+const replayChessboardSize: Ref<9 | 11 | 13> = ref(9)
 const replayProgress = ref(0)
 const replayGame = ref('')
 const isPlaying = ref(false)
@@ -98,6 +100,7 @@ onMounted(async () => {
     const savedGame = await window.electronAPI.getSavedGame(id)
     if (savedGame) {
       replayGame.value = savedGame.encoded
+      if (savedGame.size) replayChessboardSize.value = savedGame.size
     }
   }
 })
@@ -121,7 +124,7 @@ const replayGameCurrent = computed(() => replayGameSteps.value.slice(0, replayPr
 
 const chessboard = computed(() => {
   if (isReplaying.value && store.state.uiState.game) return store.state.uiState.game.chessboard
-  const board = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => Chess.None))
+  const board = Array.from({ length: replayChessboardSize.value }, () => Array.from({ length: replayChessboardSize.value }, () => Chess.None))
   replayGameCurrent.value.forEach(({ x, y }, i) => {
     const chess = i % 2 === 0 ? Chess.Black : Chess.White
     board[x][y] = chess
@@ -195,7 +198,7 @@ const startMoving = () => {
     return
   }
   pauseReplay()
-  window.electronAPI.sendData(OpCode.REPLAY_START_MOVE_OP, replayGameCurrent.value.map(({ x, y }) => positionToString(x, y)).join(' '))
+  window.electronAPI.sendData(OpCode.REPLAY_START_MOVE_OP, replayGameCurrent.value.map(({ x, y }) => positionToString(x, y)).join(' '), `${replayChessboardSize.value}`)
 }
 
 const stopMoving = () => {

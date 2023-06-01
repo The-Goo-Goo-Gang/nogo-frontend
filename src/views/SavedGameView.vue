@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import TitleBar from '@/components/TitleBar.vue'
 import { Alert } from '@/components/alert/alert'
-import { SavedGame } from '@/state'
+import { SavedGame } from '@/types'
 import dayjs from 'dayjs'
 import { Ref, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'

@@ -113,7 +113,8 @@ const saveGame = () => {
       id: `online-${store.state.uiState.game.end_time}`,
       name: `${store.state.uiState.game.metadata.player_our.name} VS ${store.state.uiState.game.metadata.player_opposing.name}`,
       timestamp: store.state.uiState.game.end_time,
-      encoded: store.state.uiState.game.encoded.trim()
+      encoded: store.state.uiState.game.encoded.trim(),
+      size: store.state.uiState.game.metadata.size
     })
     Alert({
       title: '保存成功',

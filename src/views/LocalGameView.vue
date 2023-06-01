@@ -107,7 +107,8 @@ const saveGame = () => {
       id: `local-${timestamp}`,
       name: `本地对局-${dayjs(timestamp).format('YYYY-MM-DD HH:mm:ss')}`,
       timestamp,
-      encoded: store.state.uiState.game.encoded.trim()
+      encoded: store.state.uiState.game.encoded.trim(),
+      size: store.state.uiState.game.metadata.size
     })
     Alert({
       title: '保存成功',

@@ -104,4 +104,5 @@ export interface SavedGame {
   name: string,
   timestamp: number,
   encoded: string,
+  size?: 9 | 11 | 13
 }
