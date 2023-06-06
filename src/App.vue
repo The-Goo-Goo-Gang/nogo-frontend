@@ -130,10 +130,9 @@ const stopPlayBgm = () => {
 const isValidUsername = (username: string) => {
   return username && /^\w+$/g.test(username)
 }
-watch(() => store.state.config.onlineUsername, (newUsername) => {
-  if (isValidUsername(newUsername)) {
-    window.electronAPI.sendData(OpCode.UPDATE_USERNAME_OP, newUsername)
-  }
+watch([() => store.state.config.onlineUsername, () => store.state.config.onlineTimeout], ([newUsername, newTimeout]) => {
+  const name = isValidUsername(newUsername) ? newUsername : 'Player'
+  window.electronAPI.sendData(OpCode.SYNC_ONLINE_SETTINGS_OP, name, `${newTimeout}`)
 }, { immediate: true })
 
 onMounted(() => {

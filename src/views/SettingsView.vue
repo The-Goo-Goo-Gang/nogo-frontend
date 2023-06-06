@@ -2,14 +2,26 @@
   <div class="game-settings game-view">
     <TitleBar title="设置" @back="back" />
     <div class="game-view-form">
-      <!-- 多人游戏端口号 -->
-      <div class="game-view-item" v-if="onlinePort !== '-1'">
+      <!-- 多人游戏 -->
+      <div class="game-view-item">
         <div class="game-view-item-title">多人游戏端口号</div>
         <div class="game-view-item-content full-width">
           <div class="game-view-item-content-form">
             <label class="game-view-item-content-form-label" data-error-text="端口号不合法">
               <input type="text" name="onlinePort" v-model.lazy.trim="onlinePort"
                 pattern="^((6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])|[0-5]?\d{0,4})$" required :maxlength="5" />
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="game-view-item">
+        <div class="game-view-item-title">多人游戏超时时间</div>
+        <div class="game-view-item-text">由于协议限制，无法在开始多人对局前确认双方限时，因此请在开始多人对局前手动确认双方的超时时长设置相同，否则可能会出现预期以外的问题</div>
+        <div class="game-view-item-content full-width">
+          <div class="game-view-item-content-form">
+            <label class="game-view-item-content-form-label">
+              <input type="range" :min="3" :max="120" v-model.number="onlineTimeout" />
+              {{ onlineTimeout }} 秒
             </label>
           </div>
         </div>
@@ -92,6 +104,7 @@ import { Alert } from '@/components/alert/alert'
 const file: Ref<Array<File>> = ref([])
 const { back } = useQuickRouter()
 const [playBgm] = useBooleanConfig('bgm')
+const { value: onlineTimeout } = useNumberConfig('onlineTimeout')
 const { value: bgmVolume } = useNumberConfig('bgmVolume')
 const { value: bgmType } = useNumberConfig('bgmType')
 const { value: bgmSongsId } = useStringConfig('bgmSongsId')
@@ -124,9 +137,21 @@ watch(() => parseInt(onlinePort.value), (newVal, oldVal) => {
 })
 </script>
 
-<style>
+<style scoped lang="scss">
+@import '@/styles/utils.scss';
+
 .volume-value {
   width: 3ch;
   text-align: end;
+}
+
+.game-view-item-text {
+  max-width: 320px;
+}
+
+.game-view-form {
+  max-height: 50vh;
+  overflow-y: auto;
+  @include scrollbar-style;
 }
 </style>
