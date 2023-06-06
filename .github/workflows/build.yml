@@ -2,9 +2,9 @@ name: Build with Latest Backend
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -12,27 +12,29 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Use Node.js 16.x
-      uses: actions/setup-node@v3
-      with:
-        node-version: 16.x
-        
-    - name: Fetch Backend
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-       gh run download --repo The-Goo-Goo-Gang/nogo-backend -n xmake-artifact -D .\server
-       rm .\server\nogo-test*
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
 
-    - name: Build
-      run: |
-        yarn install
-        yarn run electron:build
-        
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: artifact-windows
-        path: dist_electron\NoGo*.exe
+      - name: Fetch Backend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download --repo The-Goo-Goo-Gang/nogo-backend -n xmake-artifact -D .\server
+          rm .\server\nogo-test*
+
+      - name: Build
+        run: |
+          yarn install
+          yarn run electron:build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifact-windows
+          path: |
+            dist_electron\NoGo*.exe
+            dist_electron\NoGo*.7z
