@@ -75,6 +75,8 @@ defineExpose({ openChat, currentChatTarget })
 </script>
 
 <style lang="scss">
+@import '@/styles/utils.scss';
+
 .chat-list {
   padding: 2px 8px 8px 8px;
   background: #fff;
@@ -95,6 +97,7 @@ defineExpose({ openChat, currentChatTarget })
     height: calc(100% - 50px);
     overflow-y: auto;
     padding: 0 8px;
+    @include scrollbar-style;
   }
 
   .chat-list-empty {

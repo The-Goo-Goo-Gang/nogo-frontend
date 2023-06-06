@@ -67,6 +67,7 @@ defineExpose({ scrollToBottom, animateScrollToBottom })
 
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
+@import '@/styles/utils.scss';
 
 .chat-view {
   display: flex;
@@ -78,6 +79,7 @@ defineExpose({ scrollToBottom, animateScrollToBottom })
   backdrop-filter: blur(16px);
   min-width: 200px;
   overflow-y: auto;
+  @include scrollbar-style;
 }
 
 .chat-messages {
@@ -89,33 +91,7 @@ defineExpose({ scrollToBottom, animateScrollToBottom })
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-
-  &::-webkit-scrollbar {
-    width: 4px;
-    transition: all .3s ease-in-out;
-    /**/
-  }
-
-  &::-webkit-scrollbar-track {
-    background-color: 0;
-    transition: all .3s ease-in-out;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: rgba($color: #000, $alpha: 0.1);
-    border-radius: 2px;
-    transition: all .3s ease-in-out;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background-color: rgba($color: #000, $alpha: 0.25);
-    transition: all .3s ease-in-out;
-  }
-
-  &::-webkit-scrollbar-corner {
-    background-color: 0;
-    transition: all .3s ease-in-out;
-  }
+  @include scrollbar-style;
 }
 
 .chat-message {

@@ -60,6 +60,8 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+@import '@/styles/utils.scss';
+
 .no-saved-game {
   display: flex;
   flex-direction: row;
@@ -78,6 +80,7 @@ onMounted(async () => {
   height: 50vh;
   min-width: 320px;
   overflow-y: auto;
+  @include scrollbar-style;
 
   .saved-game {
     padding: 16px;
