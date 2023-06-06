@@ -60,11 +60,24 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+.no-saved-game {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 20px;
+  color: #666;
+}
+
 .saved-games-list {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   padding: 16px 0;
+  height: 50vh;
+  min-width: 320px;
+  overflow-y: auto;
 
   .saved-game {
     padding: 16px;
