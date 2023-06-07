@@ -13,8 +13,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-yarn.lock
-
 # Editor directories and files
 .idea
 .vscode
@@ -28,3 +26,4 @@ yarn.lock
 /dist_electron
 
 /server
+yarn.lock
